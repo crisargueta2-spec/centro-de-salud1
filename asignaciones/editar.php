@@ -1,75 +1,95 @@
 <?php
-include '../includes/conexion.php';  // Incluye la conexión
+require_once __DIR__.'/../includes/auth.php';
+require_role(['admin','secretaria','medico']);
+require_once __DIR__.'/../includes/conexion.php';
+require_once __DIR__.'/../includes/csrf.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Obtener los datos del formulario
-    $id = $_POST['id'];
-    $paciente_id = $_POST['paciente_id'];
-    $especialista_id = $_POST['especialista_id'];
-    $fecha_cita = $_POST['fecha_cita'];
-    $prioridad = $_POST['prioridad'];
+$id = (int)($_GET['id'] ?? 0);
+$as = $conn->prepare("SELECT * FROM asignaciones WHERE id=?");
+$as->execute([$id]);
+$a = $as->fetch(PDO::FETCH_ASSOC);
+if(!$a){ http_response_code(404); exit('No encontrado'); }
 
-    // Actualizar la asignación en la base de datos
-    $sql = "UPDATE asignaciones SET paciente_id=?, especialista_id=?, fecha_cita=?, prioridad=? WHERE id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute([$paciente_id, $especialista_id, $fecha_cita, $prioridad, $id]);
+$pacientes = $conn->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre,apellido")->fetchAll(PDO::FETCH_ASSOC);
+$especialistas = $conn->query("SELECT id, nombre, especialidad FROM especialistas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
 
-    // Redirigir al listado de asignaciones
-    header("Location: listar.php");  
-    exit();
+if($_SERVER['REQUEST_METHOD']==='POST'){
+  if (!csrf_validate($_POST['csrf'] ?? '')) { http_response_code(400); exit('CSRF'); }
+
+  $paciente_id     = (int)($_POST['paciente_id'] ?? 0);
+  $especialista_id = (int)($_POST['especialista_id'] ?? 0);
+  $fecha_cita      = $_POST['fecha_cita'] ?? null;
+  $prioridad       = $_POST['prioridad'] ?? null;
+
+  $up = $conn->prepare("UPDATE asignaciones
+                        SET paciente_id=?, especialista_id=?, fecha_cita=?, prioridad=?
+                        WHERE id=?");
+  $up->execute([$paciente_id,$especialista_id,$fecha_cita,$prioridad,$id]);
+
+  // ¡OJO la ruta! estamos dentro de /asignaciones/
+  header('Location: ../asignaciones/listar.php?ok=2');
+  exit;
 }
 
-// Obtener los datos de la asignación a editar
-$id = $_GET['id'];
-$stmt = $conn->prepare("SELECT * FROM asignaciones WHERE id=?");
-$stmt->execute([$id]);
-$asignacion = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Obtener el nombre del paciente (nombre y apellido)
-$pacienteStmt = $conn->prepare("SELECT nombre, apellido FROM pacientes WHERE id=?");  // Utilizamos 'apellido' aquí
-$pacienteStmt->execute([$asignacion['paciente_id']]);
-$paciente = $pacienteStmt->fetch(PDO::FETCH_ASSOC);
-
-// Obtener el nombre del especialista
-$especialistaStmt = $conn->prepare("SELECT nombre FROM especialistas WHERE id=?");  // Solo 'nombre' para el especialista
-$especialistaStmt->execute([$asignacion['especialista_id']]);
-$especialista = $especialistaStmt->fetch(PDO::FETCH_ASSOC);
-
-include '../templates/header.php';  // Incluye el encabezado
+include __DIR__.'/../templates/header.php';
 ?>
+<style>
+  .form-page{display:flex; justify-content:center}
+  .form-card{max-width:700px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
+  .form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}
+  .form-card-body{padding:16px}
+</style>
 
-<h2>Editar Asignación</h2>
+<div class="form-page">
+  <div class="form-card">
+    <div class="form-card-head">Editar Asignación</div>
+    <div class="form-card-body">
+      <form method="POST" action="asignaciones/editar.php?id=<?= $a['id'] ?>" class="row g-3">
+        <?php csrf_field(); ?>
 
-<form method="POST" action="">
-    <input type="hidden" name="id" value="<?= $asignacion['id'] ?>">
+        <div class="col-12">
+          <label class="form-label">Paciente</label>
+          <select name="paciente_id" class="form-select" required>
+            <?php foreach($pacientes as $p): ?>
+              <option value="<?= $p['id'] ?>" <?= $p['id']==$a['paciente_id']?'selected':'' ?>>
+                <?= htmlspecialchars($p['nombre'].' '.$p['apellido']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-    <!-- Mostrar nombre del paciente (nombre y apellido) -->
-    <div class="mb-3">
-        <label for="paciente_id" class="form-label">Paciente:</label>
-        <input type="text" class="form-control" name="paciente_id" value="<?= htmlspecialchars($paciente['nombre'] . ' ' . $paciente['apellido']) ?>" disabled>
+        <div class="col-12">
+          <label class="form-label">Especialista</label>
+          <select name="especialista_id" class="form-select" required>
+            <?php foreach($especialistas as $e): ?>
+              <option value="<?= $e['id'] ?>" <?= $e['id']==$a['especialista_id']?'selected':'' ?>>
+                <?= htmlspecialchars($e['nombre'].' — '.$e['especialidad']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Fecha de cita</label>
+          <input type="date" name="fecha_cita" class="form-control" value="<?= htmlspecialchars($a['fecha_cita']) ?>" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Prioridad</label>
+          <select name="prioridad" class="form-select">
+            <?php foreach(['','alta','media','baja'] as $pri): ?>
+              <option value="<?= $pri ?>" <?= ($a['prioridad']===$pri)?'selected':'' ?>><?= $pri?:'—' ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <div class="col-12 d-flex gap-2 justify-content-end">
+          <a href="asignaciones/listar.php" class="btn btn-secondary">Cancelar</a>
+          <button class="btn btn-primary" type="submit">Actualizar</button>
+        </div>
+      </form>
     </div>
+  </div>
+</div>
 
-    <!-- Mostrar nombre del especialista -->
-    <div class="mb-3">
-        <label for="especialista_id" class="form-label">Especialista:</label>
-        <input type="text" class="form-control" name="especialista_id" value="<?= htmlspecialchars($especialista['nombre']) ?>" disabled>
-    </div>
-
-    <div class="mb-3">
-        <label for="fecha_cita" class="form-label">Fecha de Cita:</label>
-        <input type="date" class="form-control" name="fecha_cita" value="<?= $asignacion['fecha_cita'] ?>" required>
-    </div>
-
-    <div class="mb-3">
-        <label for="prioridad" class="form-label">Prioridad:</label>
-        <select name="prioridad" class="form-control" required>
-            <option value="alta" <?= $asignacion['prioridad'] == 'alta' ? 'selected' : '' ?>>Alta</option>
-            <option value="media" <?= $asignacion['prioridad'] == 'media' ? 'selected' : '' ?>>Media</option>
-            <option value="baja" <?= $asignacion['prioridad'] == 'baja' ? 'selected' : '' ?>>Baja</option>
-        </select>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Actualizar Asignación</button>
-</form>
-
-<?php include '../templates/footer.php'; ?>
+<?php include __DIR__.'/../templates/footer.php'; ?>

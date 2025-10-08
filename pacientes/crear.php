@@ -5,12 +5,6 @@ require_once __DIR__.'/../includes/conexion.php';
 require_once __DIR__.'/../includes/csrf.php';
 require_once __DIR__.'/../includes/config.php';
 
-$id = (int)($_GET['id'] ?? 0);
-$stmt = $conn->prepare("SELECT * FROM pacientes WHERE id=?");
-$stmt->execute([$id]);
-$p = $stmt->fetch();
-if(!$p){ http_response_code(404); exit('No encontrado'); }
-
 if($_SERVER['REQUEST_METHOD']==='POST'){
   if (!csrf_validate($_POST['csrf'] ?? '')) { http_response_code(400); exit('CSRF'); }
   $nombre = trim($_POST['nombre'] ?? '');
@@ -21,9 +15,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   $motivo = trim($_POST['motivo'] ?? '');
   $fecha_referencia = $_POST['fecha_referencia'] ?? null;
 
-  $up = $conn->prepare("UPDATE pacientes SET nombre=?,apellido=?,fecha_nacimiento=?,genero=?,medico_referente=?,motivo=?,fecha_referencia=? WHERE id=?");
-  $up->execute([$nombre,$apellido,$fecha_nacimiento,$genero,$medico_referente,$motivo,$fecha_referencia,$id]);
-  header('Location: '. (defined('APP_URL')?APP_URL:'') .'pacientes/listar.php?ok=2'); exit;
+  $stmt = $conn->prepare("INSERT INTO pacientes (nombre,apellido,fecha_nacimiento,genero,medico_referente,motivo,fecha_referencia) VALUES (?,?,?,?,?,?,?)");
+  $stmt->execute([$nombre,$apellido,$fecha_nacimiento,$genero,$medico_referente,$motivo,$fecha_referencia]);
+  header('Location: '. (defined('APP_URL')?APP_URL:'') .'pacientes/listar.php?ok=1'); exit;
 }
 
 include __DIR__.'/../templates/header.php';
@@ -32,45 +26,46 @@ include __DIR__.'/../templates/header.php';
 
 <div class="form-page">
   <div class="form-card">
-    <div class="form-card-head">Editar Paciente</div>
+    <div class="form-card-head">Registrar Paciente</div>
     <div class="form-card-body">
-      <form method="POST" action="pacientes/editar.php?id=<?= $p['id'] ?>" class="row g-3">
+      <form method="POST" action="pacientes/crear.php" class="row g-3">
         <?php csrf_field(); ?>
         <div class="col-md-6">
           <label class="form-label">Nombre</label>
-          <input type="text" name="nombre" class="form-control" value="<?= htmlspecialchars($p['nombre']) ?>" required>
+          <input type="text" name="nombre" class="form-control" required>
         </div>
         <div class="col-md-6">
           <label class="form-label">Apellido</label>
-          <input type="text" name="apellido" class="form-control" value="<?= htmlspecialchars($p['apellido']) ?>" required>
+          <input type="text" name="apellido" class="form-control" required>
         </div>
         <div class="col-md-4">
           <label class="form-label">Fecha de nacimiento</label>
-          <input type="date" name="fecha_nacimiento" class="form-control" value="<?= htmlspecialchars($p['fecha_nacimiento']) ?>">
+          <input type="date" name="fecha_nacimiento" class="form-control">
         </div>
         <div class="col-md-4">
           <label class="form-label">Género</label>
           <select name="genero" class="form-select">
-            <?php foreach (['','Masculino','Femenino','Otro'] as $g): ?>
-              <option value="<?= $g ?>" <?= ($p['genero']===$g)?'selected':'' ?>><?= $g?:'—' ?></option>
-            <?php endforeach; ?>
+            <option value="">—</option>
+            <option>Masculino</option>
+            <option>Femenino</option>
+            <option>Otro</option>
           </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Fecha referencia</label>
-          <input type="date" name="fecha_referencia" class="form-control" value="<?= htmlspecialchars($p['fecha_referencia']) ?>">
+          <input type="date" name="fecha_referencia" class="form-control">
         </div>
         <div class="col-md-6">
           <label class="form-label">Médico referente</label>
-          <input type="text" name="medico_referente" class="form-control" value="<?= htmlspecialchars($p['medico_referente']) ?>">
+          <input type="text" name="medico_referente" class="form-control">
         </div>
         <div class="col-12">
           <label class="form-label">Motivo</label>
-          <textarea name="motivo" class="form-control" rows="3"><?= htmlspecialchars($p['motivo']) ?></textarea>
+          <textarea name="motivo" class="form-control" rows="3"></textarea>
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
           <a href="pacientes/listar.php" class="btn btn-secondary">Cancelar</a>
-          <button class="btn btn-primary" type="submit">Actualizar</button>
+          <button class="btn btn-primary" type="submit">Guardar</button>
         </div>
       </form>
     </div>
