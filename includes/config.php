@@ -1,4 +1,12 @@
 <?php
-// OJO: respeta %20 por el espacio en el nombre de la carpeta
-define('APP_BASE', '/Centro%20de%20salud%20sur/');
-define('APP_URL',  'http://localhost/Centro%20de%20salud%20sur/'); // para redirecciones
+// Configuración base para entorno de producción en Railway
+
+// Ruta base relativa (la raíz del proyecto)
+define('APP_BASE', '/');
+
+// URL base absoluta (Railway asigna un dominio público)
+define('APP_URL', 'https://' . $_SERVER['HTTP_HOST'] . '/');
+
+// Ejemplo: si Railway asigna "https://centro-de-salud1-production.up.railway.app"
+// el APP_URL resultará automáticamente correcto.
+?>
