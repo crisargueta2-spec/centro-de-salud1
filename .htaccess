@@ -1,10 +1,19 @@
+# Habilitar reescritura de URLs
 Options +FollowSymLinks
 RewriteEngine On
 
-# Redirigir automáticamente a index.php si no hay ruta específica
+# Establecer base de reescritura (raíz del proyecto)
+RewriteBase /
+
+# Archivo principal
 DirectoryIndex index.php
 
-# Asegurar acceso directo a archivos PHP dentro de subcarpetas
+# 🔒 Permitir acceso directo a archivos estáticos (CSS, JS, imágenes, fuentes, etc.)
+RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|pdf|txt)$ [NC]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# 🔁 Redirigir todas las demás peticiones dinámicas a index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [L]
+RewriteRule ^ index.php [L,QSA]
