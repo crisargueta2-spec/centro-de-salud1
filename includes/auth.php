@@ -1,65 +1,24 @@
 <?php
 require_once __DIR__ . '/session.php';
-require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/config.php';
 
-function login($username, $password) {
-    global $conn;
-
-    try {
-        $stmt = $conn->prepare("SELECT id, username, password, role FROM usuarios WHERE username = ?");
-        $stmt->execute([$username]);
-        $u = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$u) {
-            error_log("❌ Usuario no encontrado: $username");
-            return false;
-        }
-
-        $hash = trim($u['password']);
-
-        if (empty($hash)) {
-            error_log("⚠️ El usuario $username tiene campo password vacío");
-            return false;
-        }
-
-        // Comparación segura
-        if (password_verify($password, $hash)) {
-            $_SESSION['user'] = [
-                'id' => (int)$u['id'],
-                'username' => $u['username'],
-                'rol' => $u['role']
-            ];
-            error_log("✅ Login exitoso para $username");
-            return true;
-        } else {
-            error_log("❌ Contraseña incorrecta para $username");
-            return false;
-        }
-
-    } catch (PDOException $e) {
-        error_log("❌ Error en login(): " . $e->getMessage());
-        return false;
-    }
-}
-
-function logout() {
-    $_SESSION = [];
-    if (ini_get("session.use_cookies")) {
-        $p = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $p["path"], $p["domain"], $p["secure"], $p["httponly"]);
-    }
-    session_destroy();
-}
-
-function is_logged() {
-    return !empty($_SESSION['user']);
-}
-
+/**
+ * Retorna el usuario logueado actual, o null si no hay sesión.
+ */
 function user() {
     return $_SESSION['user'] ?? null;
 }
 
+/**
+ * Verifica si el usuario está logueado.
+ */
+function is_logged() {
+    return isset($_SESSION['user']);
+}
+
+/**
+ * Requiere que haya sesión activa; si no, redirige al login.
+ */
 function require_login() {
     if (!is_logged()) {
         header('Location: ' . APP_URL . 'index.php?msg=login');
@@ -67,38 +26,39 @@ function require_login() {
     }
 }
 
-function redirect_by_role($rol) {
-    $base = rtrim(APP_URL, '/') . '/';
-    switch ($rol) {
-        case 'admin':
-            header('Location: ' . $base . 'roles/admin_dashboard.php');
-            break;
-        case 'medico':
-            header('Location: ' . $base . 'roles/medico_dashboard.php');
-            break;
-        case 'secretaria':
-            header('Location: ' . $base . 'roles/secretaria_dashboard.php');
-            break;
-        default:
-            header('Location: ' . $base . 'index.php');
-    }
-    exit;
-} 
 /**
- * Verifica si el usuario tiene un rol específico.
+ * Requiere que el usuario tenga un rol específico.
  */
-function require_role($rol) {
-    if (!is_logged()) {
-        header('Location: ' . APP_URL . 'index.php?msg=login');
-        exit;
-    }
+function require_role($required_role) {
+    require_login();
 
-    if ($_SESSION['user']['rol'] !== $rol) {
-        header('HTTP/1.1 403 Forbidden');
-        echo "<h1 style='text-align:center;color:red;margin-top:50px'>🚫 Acceso denegado</h1>";
-        echo "<p style='text-align:center'>No tienes permiso para acceder a esta sección.</p>";
+    $user = $_SESSION['user'] ?? null;
+    $rol = strtolower($user['rol'] ?? ($user['role'] ?? ''));
+
+    if ($rol !== strtolower($required_role)) {
+        header('Location: ' . APP_URL . 'index.php?msg=login');
         exit;
     }
 }
 
+/**
+ * Redirige al panel correcto según el rol del usuario.
+ */
+function redirect_by_role($role) {
+    switch (strtolower($role)) {
+        case 'admin':
+            header('Location: ' . APP_URL . 'roles/admin_dashboard.php');
+            break;
+        case 'medico':
+            header('Location: ' . APP_URL . 'roles/medico_dashboard.php');
+            break;
+        case 'secretaria':
+            header('Location: ' . APP_URL . 'roles/secretaria_dashboard.php');
+            break;
+        default:
+            header('Location: ' . APP_URL . 'index.php?msg=login');
+            break;
+    }
+    exit;
+}
 ?>
