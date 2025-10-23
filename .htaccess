@@ -1,0 +1,10 @@
+Options +FollowSymLinks
+RewriteEngine On
+
+# Redirigir automáticamente a index.php si no hay ruta específica
+DirectoryIndex index.php
+
+# Asegurar acceso directo a archivos PHP dentro de subcarpetas
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L]

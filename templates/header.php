@@ -1,7 +1,9 @@
-<?php require_once __DIR__.'/../includes/session.php'; ?>
+<?php require_once __DIR__.'/../includes/session.php'; ?> 
 <?php
   $u   = $_SESSION['user'] ?? null;
   $rol = strtolower($u['rol'] ?? ($u['role'] ?? ''));
+
+  require_once __DIR__ . '/../includes/config.php';
 
   $uri    = $_SERVER['REQUEST_URI'] ?? '';
   $active = function(string $needle) use ($uri) {
@@ -19,7 +21,7 @@
   $canRecetas        = in_array($rol, ['admin','secretaria','medico']);
   $canHistorial      = in_array($rol, ['admin','secretaria','medico']);
 
-  $dashboard = 'roles/'.($rol ?: 'admin').'_dashboard.php';
+  $dashboard = APP_URL . 'roles/' . ($rol ?: 'admin') . '_dashboard.php';
 ?>
 <!doctype html>
 <html lang="es">
@@ -27,7 +29,8 @@
   <meta charset="utf-8">
   <title>Centro de Salud Sur</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <base href="/Centro%20de%20salud%20sur/">
+
+  <base href="<?= APP_URL ?>">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -76,69 +79,69 @@
 
     <!-- 1) Usuarios (solo admin) -->
     <?php if ($canUsuarios) { ?>
-      <a class="<?= $active('usuarios/') ?>" href="usuarios/listar.php">
+      <a class="<?= $active('usuarios/') ?>" href="<?= APP_URL ?>usuarios/listar.php">
         <i class="bi bi-people-fill me-2"></i>Usuarios
       </a>
     <?php } ?>
 
     <!-- 2) Pacientes -->
     <?php if ($canPacientes) { ?>
-      <a class="<?= $active('pacientes/') ?>" href="pacientes/listar.php">
+      <a class="<?= $active('pacientes/') ?>" href="<?= APP_URL ?>pacientes/listar.php">
         <i class="bi bi-person-vcard-fill me-2"></i>Pacientes
       </a>
     <?php } ?>
 
     <!-- 3) Antecedentes -->
     <?php if ($canAntecedentes) { ?>
-      <a class="<?= $active('antecedentes/') ?>" href="antecedentes/listar.php">
+      <a class="<?= $active('antecedentes/') ?>" href="<?= APP_URL ?>antecedentes/listar.php">
         <i class="bi bi-prescription me-2"></i>Antecedentes
       </a>
     <?php } ?>
 
     <!-- 4) Especialistas -->
     <?php if ($canEspecialistas) { ?>
-      <a class="<?= $active('especialista/') ?>" href="especialista/listar.php">
+      <a class="<?= $active('especialista/') ?>" href="<?= APP_URL ?>especialista/listar.php">
         <i class="bi bi-heart-pulse-fill me-2"></i>Especialistas
       </a>
     <?php } ?>
 
     <!-- 5) Asignaciones -->
     <?php if ($canAsignaciones) { ?>
-      <a class="<?= $active('asignaciones/') ?>" href="asignaciones/listar.php">
+      <a class="<?= $active('asignaciones/') ?>" href="<?= APP_URL ?>asignaciones/listar.php">
         <i class="bi bi-journal-text me-2"></i>Asignaciones
       </a>
     <?php } ?>
 
     <!-- 6) Seguimientos -->
     <?php if ($canSeguimientos) { ?>
-      <a class="<?= $active('seguimientos/') ?>" href="seguimientos/listar.php">
+      <a class="<?= $active('seguimientos/') ?>" href="<?= APP_URL ?>seguimientos/listar.php">
         <i class="bi bi-clipboard2-pulse-fill me-2"></i>Seguimientos
       </a>
     <?php } ?>
 
-    <!-- 7) Tratamientos (médico/admin) -->
+    <!-- 7) Tratamientos -->
     <?php if ($canTratamientos) { ?>
-      <a class="<?= $active('tratamientos/') ?>" href="tratamientos/listar.php">
+      <a class="<?= $active('tratamientos/') ?>" href="<?= APP_URL ?>tratamientos/listar.php">
         <i class="bi bi-capsule me-2"></i>Tratamientos
       </a>
     <?php } ?>
 
     <!-- 8) Recetas -->
     <?php if ($canRecetas) { ?>
-      <a class="<?= $active('recetas/') ?>" href="recetas/listar.php">
+      <a class="<?= $active('recetas/') ?>" href="<?= APP_URL ?>recetas/listar.php">
         <i class="bi bi-file-medical me-2"></i>Recetas
       </a>
     <?php } ?>
 
     <!-- 9) Historial -->
     <?php if ($canHistorial) { ?>
-      <a class="<?= $active('historial/') ?>" href="historial/listar.php">
+      <a class="<?= $active('historial/') ?>" href="<?= APP_URL ?>historial/listar.php">
         <i class="bi bi-archive me-2"></i>Historial médico
       </a>
     <?php } ?>
 
     <!-- Salir -->
-    <a href="salir.php"><i class="bi bi-box-arrow-right me-2"></i>Cambiar usuario</a>
+    <a href="<?= APP_URL ?>salir.php"><i class="bi bi-box-arrow-right me-2"></i>Cambiar usuario</a>
   </aside>
 <?php endif; ?>
 

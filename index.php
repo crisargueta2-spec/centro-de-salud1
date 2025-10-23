@@ -8,7 +8,7 @@ if (is_logged()) { redirect_by_role(user()['rol']); }
 <head>
   <meta charset="UTF-8">
   <title>Iniciar sesión — Centro de Salud Sur</title>
-  <base href="/Centro%20de%20salud%20sur/">
+  <base href="/centrodesaludsur/">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
