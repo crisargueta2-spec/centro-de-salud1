@@ -29,8 +29,13 @@ function logout() {
     session_destroy();
 }
 
-function is_logged() { return !empty($_SESSION['user']); }
-function user() { return $_SESSION['user'] ?? null; }
+function is_logged() { 
+    return !empty($_SESSION['user']); 
+}
+
+function user() { 
+    return $_SESSION['user'] ?? null; 
+}
 
 function require_login() {
     if (!is_logged()) {
@@ -39,27 +44,25 @@ function require_login() {
     }
 }
 
-function redirect_by_role($role) {
-    $base = rtrim(APP_URL, '/') . '/';
-
-    if ($role === 'admin') {
-        header('Location: ' . $base . 'admin/index.php');
-        exit;
-    } elseif ($role === 'medico') {
-        header('Location: ' . $base . 'medico/index.php');
-        exit;
-    } else {
-        header('Location: ' . $base . 'usuario/index.php');
-        exit;
-    }
-}
-
+/**
+ * Redirige al usuario según su rol.
+ * Compatible con Railway (usa rutas absolutas basadas en APP_URL)
+ */
 function redirect_by_role($rol) {
+    $base = rtrim(APP_URL, '/') . '/';
+    
     switch ($rol) {
-        case 'admin':      header('Location: ' . APP_URL . 'roles/admin_dashboard.php'); break;
-        case 'medico':     header('Location: ' . APP_URL . 'roles/medico_dashboard.php'); break;
-        case 'secretaria': header('Location: ' . APP_URL . 'roles/secretaria_dashboard.php'); break;
-        default:           header('Location: ' . APP_URL . 'index.php');
+        case 'admin':
+            header('Location: ' . $base . 'roles/admin_dashboard.php');
+            break;
+        case 'medico':
+            header('Location: ' . $base . 'roles/medico_dashboard.php');
+            break;
+        case 'secretaria':
+            header('Location: ' . $base . 'roles/secretaria_dashboard.php');
+            break;
+        default:
+            header('Location: ' . $base . 'index.php');
     }
     exit;
 }
