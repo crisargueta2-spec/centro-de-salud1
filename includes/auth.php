@@ -3,35 +3,44 @@ require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/config.php';
 
-/**
- * Autentica un usuario por username y password.
- */
 function login($username, $password) {
     global $conn;
-    error_log("🟡 Intentando login de usuario: $username");
 
-    $stmt = $conn->prepare("SELECT id, username, password, role FROM usuarios WHERE username = ?");
-    $stmt->execute([$username]);
-    $u = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $conn->prepare("SELECT id, username, password, role FROM usuarios WHERE username = ?");
+        $stmt->execute([$username]);
+        $u = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$u) {
-        error_log("❌ Usuario no encontrado: $username");
+        if (!$u) {
+            error_log("❌ Usuario no encontrado: $username");
+            return false;
+        }
+
+        $hash = trim($u['password']);
+
+        if (empty($hash)) {
+            error_log("⚠️ El usuario $username tiene campo password vacío");
+            return false;
+        }
+
+        // Comparación segura
+        if (password_verify($password, $hash)) {
+            $_SESSION['user'] = [
+                'id' => (int)$u['id'],
+                'username' => $u['username'],
+                'rol' => $u['role']
+            ];
+            error_log("✅ Login exitoso para $username");
+            return true;
+        } else {
+            error_log("❌ Contraseña incorrecta para $username");
+            return false;
+        }
+
+    } catch (PDOException $e) {
+        error_log("❌ Error en login(): " . $e->getMessage());
         return false;
     }
-
-    if (!password_verify($password, $u['password'])) {
-        error_log("❌ Contraseña incorrecta para: $username");
-        return false;
-    }
-
-    $_SESSION['user'] = [
-        'id' => (int)$u['id'],
-        'username' => $u['username'],
-        'rol' => $u['role']
-    ];
-
-    error_log("✅ Login exitoso para $username con rol {$u['role']}");
-    return true;
 }
 
 function logout() {
@@ -58,13 +67,8 @@ function require_login() {
     }
 }
 
-/**
- * Redirige al usuario según su rol.
- * Totalmente compatible con Railway (usa rutas absolutas basadas en APP_URL)
- */
 function redirect_by_role($rol) {
     $base = rtrim(APP_URL, '/') . '/';
-
     switch ($rol) {
         case 'admin':
             header('Location: ' . $base . 'roles/admin_dashboard.php');
