@@ -1,12 +1,11 @@
 <?php
-// Configuración base para entorno de producción en Railway
-
-// Ruta base relativa (la raíz del proyecto)
-define('APP_BASE', '/');
-
-// URL base absoluta (Railway asigna un dominio público)
-define('APP_URL', 'https://' . $_SERVER['HTTP_HOST'] . '/');
-
-// Ejemplo: si Railway asigna "https://centro-de-salud1-production.up.railway.app"
-// el APP_URL resultará automáticamente correcto.
+if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false) {
+    // Entorno local
+    define('APP_BASE', '/Centro%20de%20salud%20sur/');
+    define('APP_URL',  'http://localhost/Centro%20de%20salud%20sur/');
+} else {
+    // Entorno Railway (producción)
+    define('APP_BASE', '/');
+    define('APP_URL', 'https://' . $_SERVER['HTTP_HOST'] . '/');
+}
 ?>
