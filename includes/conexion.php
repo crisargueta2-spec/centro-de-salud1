@@ -1,18 +1,15 @@
-
 <?php
-// Lee primero variables de entorno (producción/Railway)
-$host = getenv('DB_HOST') ?: 'localhost';
-$port = getenv('DB_PORT') ?: '3306';
-$db   = getenv('DB_NAME') ?: 'hospital_huehuetenango';
-$user = getenv('DB_USER') ?: 'root';
-$pass = getenv('DB_PASS') ?: '';
-$charset = 'utf8mb4';
+$host = "maglev.proxy.rlwy.net";
+$user = "root";
+$password = "gIEWCrtENrUZBedRLzuonZaLqaCHBnMC";
+$dbname = "railway";
+$port = 45098;
 
-$dsn = "mysql:host={$host};port={$port};dbname={$db};charset={$charset}";
-$options = [
-  PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-  PDO::ATTR_EMULATE_PREPARES   => false,
-];
-$conn = new PDO($dsn, $user, $pass, $options);
-
+try {
+    $conn = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8", $user, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // echo "✅ Conexión exitosa a la base de datos.";
+} catch (PDOException $e) {
+    die("❌ Error de conexión: " . $e->getMessage());
+}
+?>
