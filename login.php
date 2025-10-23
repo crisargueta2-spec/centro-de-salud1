@@ -1,22 +1,30 @@
 <?php
-require_once __DIR__.'/includes/auth.php';
-require_once __DIR__.'/includes/csrf.php';
-require_once __DIR__.'/includes/config.php';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/conexion.php';
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/csrf.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_validate($_POST['csrf'] ?? '')) {
-    header('Location: ' . APP_URL . 'index.php?err=1'); exit;
+    header('Location: ' . APP_URL . 'index.php?err=csrf');
+    exit;
 }
 
 $username = trim($_POST['username'] ?? '');
 $password = $_POST['password'] ?? '';
 
 if (!$username || !$password) {
-    header('Location: ' . APP_URL . 'index.php?err=1'); exit;
+    header('Location: ' . APP_URL . 'index.php?err=empty');
+    exit;
 }
 
 if (login($username, $password)) {
-    redirect_by_role($_SESSION['user']['rol']); // ya hace exit()
+    // ✅ Usuario autenticado correctamente
+    redirect_by_role($_SESSION['user']['rol']);
 } else {
-    header('Location: ' . APP_URL . 'index.php?err=1'); exit;
+    // ❌ Usuario o contraseña incorrectos
+    error_log("❌ Login fallido para usuario: $username");
+    header('Location: ' . APP_URL . 'index.php?err=invalid');
+    exit;
 }
 ?>
+

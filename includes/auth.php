@@ -3,20 +3,34 @@ require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/config.php';
 
+/**
+ * Autentica un usuario por username y password.
+ */
 function login($username, $password) {
     global $conn;
+    error_log("🟡 Intentando login de usuario: $username");
+
     $stmt = $conn->prepare("SELECT id, username, password, role FROM usuarios WHERE username = ?");
     $stmt->execute([$username]);
     $u = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$u) return false;
-    if (!password_verify($password, $u['password'])) return false;
+    if (!$u) {
+        error_log("❌ Usuario no encontrado: $username");
+        return false;
+    }
+
+    if (!password_verify($password, $u['password'])) {
+        error_log("❌ Contraseña incorrecta para: $username");
+        return false;
+    }
 
     $_SESSION['user'] = [
         'id' => (int)$u['id'],
         'username' => $u['username'],
         'rol' => $u['role']
     ];
+
+    error_log("✅ Login exitoso para $username con rol {$u['role']}");
     return true;
 }
 
@@ -29,12 +43,12 @@ function logout() {
     session_destroy();
 }
 
-function is_logged() { 
-    return !empty($_SESSION['user']); 
+function is_logged() {
+    return !empty($_SESSION['user']);
 }
 
-function user() { 
-    return $_SESSION['user'] ?? null; 
+function user() {
+    return $_SESSION['user'] ?? null;
 }
 
 function require_login() {
@@ -46,11 +60,11 @@ function require_login() {
 
 /**
  * Redirige al usuario según su rol.
- * Compatible con Railway (usa rutas absolutas basadas en APP_URL)
+ * Totalmente compatible con Railway (usa rutas absolutas basadas en APP_URL)
  */
 function redirect_by_role($rol) {
     $base = rtrim(APP_URL, '/') . '/';
-    
+
     switch ($rol) {
         case 'admin':
             header('Location: ' . $base . 'roles/admin_dashboard.php');
