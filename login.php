@@ -1,30 +1,47 @@
 <?php
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/conexion.php';
+require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/csrf.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_validate($_POST['csrf'] ?? '')) {
-    header('Location: ' . APP_URL . 'index.php?err=csrf');
+// Validar token CSRF
+if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+    header('Location: index.php?err=csrf');
     exit;
 }
 
 $username = trim($_POST['username'] ?? '');
-$password = $_POST['password'] ?? '';
+$password = trim($_POST['password'] ?? '');
 
-if (!$username || !$password) {
-    header('Location: ' . APP_URL . 'index.php?err=empty');
+if (empty($username) || empty($password)) {
+    header('Location: index.php?err=invalid');
     exit;
 }
 
-if (login($username, $password)) {
-    // ✅ Usuario autenticado correctamente
-    redirect_by_role($_SESSION['user']['rol']);
-} else {
-    // ❌ Usuario o contraseña incorrectos
-    error_log("❌ Login fallido para usuario: $username");
-    header('Location: ' . APP_URL . 'index.php?err=invalid');
+try {
+    // Buscar usuario
+    $stmt = $conn->prepare("SELECT * FROM usuarios WHERE username = :u LIMIT 1");
+    $stmt->execute([':u' => $username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user && password_verify($password, $user['password'])) {
+        // Guardar sesión
+        $_SESSION['user'] = [
+            'id'   => $user['id'],
+            'username' => $user['username'],
+            'rol'  => $user['role'] ?? $user['rol'] ?? 'usuario'
+        ];
+
+        // Redirigir según el rol
+        redirect_by_role($_SESSION['user']['rol']);
+    } else {
+        header('Location: index.php?err=invalid');
+        exit;
+    }
+} catch (PDOException $e) {
+    error_log("Error al iniciar sesión: " . $e->getMessage());
+    header('Location: index.php?err=db');
     exit;
 }
 ?>
-
