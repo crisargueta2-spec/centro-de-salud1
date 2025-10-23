@@ -83,5 +83,22 @@ function redirect_by_role($rol) {
             header('Location: ' . $base . 'index.php');
     }
     exit;
+} 
+/**
+ * Verifica si el usuario tiene un rol específico.
+ */
+function require_role($rol) {
+    if (!is_logged()) {
+        header('Location: ' . APP_URL . 'index.php?msg=login');
+        exit;
+    }
+
+    if ($_SESSION['user']['rol'] !== $rol) {
+        header('HTTP/1.1 403 Forbidden');
+        echo "<h1 style='text-align:center;color:red;margin-top:50px'>🚫 Acceso denegado</h1>";
+        echo "<p style='text-align:center'>No tienes permiso para acceder a esta sección.</p>";
+        exit;
+    }
 }
+
 ?>

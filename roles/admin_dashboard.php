@@ -1,57 +1,62 @@
 <?php
-require_once __DIR__.'/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
-include __DIR__.'/../templates/header.php';
+$user = user();
 ?>
-<style>
-.hero {
-  background:
-    radial-gradient(1200px 200px at 100% 0, rgba(255,255,255,.15), transparent 60%),
-    linear-gradient(135deg,#0d6efd 0%,#0aa2c0 100%);
-  color:#fff; border-radius:20px; padding:28px;
-  display:flex; gap:22px; align-items:center; box-shadow:0 10px 30px rgba(13,110,253,.25);
-}
-.hero-logo { width:96px; height:96px; border-radius:50%; background:#fff; padding:10px;
-  box-shadow:0 8px 24px rgba(0,0,0,.25); object-fit:contain;
-}
-.hero-title { font-size:1.9rem; font-weight:800; letter-spacing:.2px; margin:0 }
-.hero-sub   { opacity:.95; margin:2px 0 0 }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel del Administrador — Centro de Salud Sur</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background:#f4f6f8; font-family: 'Segoe UI', sans-serif; }
+    .navbar { background:#007a78; }
+    .navbar-brand, .nav-link, .navbar-text { color:#fff !important; }
+    .dashboard-card { border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,.1); transition:.3s; }
+    .dashboard-card:hover { transform:translateY(-3px); }
+    .icon { font-size:42px; color:#007a78; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="#">Centro de Salud Sur</a>
+    <div class="d-flex">
+      <span class="navbar-text me-3">👤 <?php echo htmlspecialchars($user['username']); ?> (<?php echo $user['rol']; ?>)</span>
+      <a href="../logout.php" class="btn btn-outline-light btn-sm">Cerrar sesión</a>
+    </div>
+  </div>
+</nav>
 
-.info-card { background:#fff; border-radius:16px; padding:22px;
-  box-shadow:0 6px 18px rgba(0,0,0,.08); height:100%;
-}
-.info-card h4 { font-weight:800; margin-bottom:10px }
-.icon-pill { display:inline-flex; align-items:center; justify-content:center;
-  width:36px; height:36px; border-radius:12px; background:#e7f1ff; color:#0d6efd; margin-right:8px;
-}
-</style>
-
-<div class="hero">
-  <picture>
-    <source srcset="img/logo.webp" type="image/webp">
-    <source srcset="img/logo.png"  type="image/png">
-    <img src="img/logo.jpg" class="hero-logo" alt="Logo" onerror="this.style.display='none'">
-  </picture>
-  <div>
-    <h1 class="hero-title">Tu salud es nuestro compromiso</h1>
-    <p class="hero-sub">Centro de Salud Sur — Huehuetenango</p>
+<div class="container py-5">
+  <h2 class="mb-4 text-center text-success">Panel del Administrador</h2>
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-3">
+      <div class="card dashboard-card text-center p-4">
+        <i class="bi bi-person-lines-fill icon"></i>
+        <h5 class="mt-3">Gestión de Pacientes</h5>
+        <a href="../pacientes.php" class="btn btn-outline-success mt-3">Ver</a>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card dashboard-card text-center p-4">
+        <i class="bi bi-clipboard2-pulse icon"></i>
+        <h5 class="mt-3">Asignaciones</h5>
+        <a href="../asignaciones.php" class="btn btn-outline-success mt-3">Ver</a>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card dashboard-card text-center p-4">
+        <i class="bi bi-people-fill icon"></i>
+        <h5 class="mt-3">Usuarios</h5>
+        <a href="../usuarios.php" class="btn btn-outline-success mt-3">Ver</a>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="row g-3 mt-4">
-  <div class="col-lg-6">
-    <div class="info-card">
-      <h4><span class="icon-pill"><i class="bi bi-flag"></i></span>Misión</h4>
-      <p class="text-muted mb-0">[Brindar atención integral en salud, accesible, 
-        digna y eficiente a toda persona que lo requiera, enfocándose en la prevención, tratamiento y seguimiento de enfermedades comunes.]</p>
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="info-card">
-      <h4><span class="icon-pill"><i class="bi bi-eye"></i></span>Visión</h4>
-      <p class="text-muted mb-0">[Ser un centro de referencia local en atención primaria, reconocido por la calidad humana de su servicio, la eficiencia de sus procesos y su compromiso con el bienestar de la comunidad.]</p>
-    </div>
-  </div>
-</div>
-
-<?php include __DIR__.'/../templates/footer.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
