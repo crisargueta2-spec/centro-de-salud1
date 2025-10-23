@@ -1,19 +1,21 @@
 <?php
-// Detectar entorno automáticamente
-if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false) {
-    // 🔹 Config local
-    $app_url = 'http://localhost/Centro%20de%20salud%20sur/';
+// 🔹 Detección automática del entorno
+if (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false) {
+    // 🔸 Entorno local (XAMPP)
+    define('APP_URL', 'http://localhost/Centro%20de%20salud%20sur/');
 } else {
-    // 🔹 Config producción (Railway u otro hosting)
-    $app_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http');
-    $app_url .= '://' . $_SERVER['HTTP_HOST'] . '/';
+    // 🔸 Entorno producción (Railway)
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'centro-de-salud1-production.up.railway.app';
+    define('APP_URL', $scheme . '://' . $host . '/');
 }
 
-// 🔹 Asegurar que termine con una sola barra /
-if (substr($app_url, -1) !== '/') {
-    $app_url .= '/';
-}
-
-define('APP_URL', $app_url);
+// 🔹 Base del proyecto (para rutas internas)
 define('APP_BASE', '/');
+
+// 🔹 (DEBUG opcional)
+if (isset($_GET['debug_url'])) {
+    echo "APP_URL: " . APP_URL;
+    exit;
+}
 ?>
