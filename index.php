@@ -1,14 +1,18 @@
 <?php
-require_once __DIR__.'/includes/auth.php';
-require_once __DIR__.'/includes/csrf.php';
-if (is_logged()) { redirect_by_role(user()['rol']); }
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/session.php';
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/csrf.php';
+
+if (is_logged()) {
+  redirect_by_role(user()['rol']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Iniciar sesión — Centro de Salud Sur</title>
-  <base href="/centrodesaludsur/">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -56,7 +60,7 @@ if (is_logged()) { redirect_by_role(user()['rol']); }
         <div class="alert alert-info">Sesión cerrada correctamente. Puedes iniciar nuevamente.</div>
       <?php endif; ?>
 
-      <form action="login.php" method="POST" novalidate>
+      <form action="<?php echo APP_URL; ?>login.php" method="POST" novalidate>
         <?php csrf_field(); ?>
         <div class="mb-3">
           <input type="text" class="form-control" placeholder="Usuario" name="username" required autocomplete="username">
