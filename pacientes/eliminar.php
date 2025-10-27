@@ -1,21 +1,28 @@
 <?php
-include '../includes/conexion.php';
+require_once __DIR__.'/../includes/auth.php';
+require_role(['admin','secretaria']);
+require_once __DIR__.'/../includes/conexion.php';
 
-$id = $_GET['id'] ?? null;
+$id = (int)($_GET['id'] ?? 0);
+if (!$id) { header('Location: ../pacientes/listar.php?err=1'); exit; }
 
-if ($id) {
-    // Eliminar asignaciones del paciente
-    $stmt = $conn->prepare("DELETE FROM asignaciones WHERE paciente_id = ?");
-    $stmt->execute([$id]);
+try {
+  $conn->beginTransaction();
 
-    // Eliminar seguimientos del paciente
-    $stmt = $conn->prepare("DELETE FROM seguimientos WHERE paciente_id = ?");
-    $stmt->execute([$id]);
+  $stmt = $conn->prepare("DELETE FROM seguimientos WHERE paciente_id = ?");
+  $stmt->execute([$id]);
 
-    // Finalmente eliminar el paciente
-    $stmt = $conn->prepare("DELETE FROM pacientes WHERE id = ?");
-    $stmt->execute([$id]);
+  $stmt = $conn->prepare("DELETE FROM asignaciones WHERE paciente_id = ?");
+  $stmt->execute([$id]);
+
+  $stmt = $conn->prepare("DELETE FROM pacientes WHERE id = ?");
+  $stmt->execute([$id]);
+
+  $conn->commit();
+  header('Location: ../pacientes/listar.php?ok=3');  // <-- aquí el cambio
+  exit;
+} catch (Throwable $e) {
+  if ($conn->inTransaction()) { $conn->rollBack(); }
+  header('Location: ../pacientes/listar.php?err=fk'); // <-- y aquí también
+  exit;
 }
-
-header('Location: listar.php');
-exit;

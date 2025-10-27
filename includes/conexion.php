@@ -1,28 +1,14 @@
 <?php
-// $servername = "localhost";  // Normalmente localhost si usas XAMPP u otro servidor local
-/*$username = "root";         // Usuario de tu base de datos (por defecto root)
-$password = "";             // Contraseña (por defecto vacía en XAMPP)
-$dbname = "hospital_huehuetenango";  // Nombre exacto de la base de datos que creaste
+$host = getenv('MYSQL_ADDON_HOST');
+$db   = getenv('MYSQL_ADDON_DB');
+$user = getenv('MYSQL_ADDON_USER');
+$pass = getenv('MYSQL_ADDON_PASSWORD');
+$port = getenv('MYSQL_ADDON_PORT') ?: 3306;
 
 try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
-    // Configura para que lance excepciones en errores
+    $conn = new PDO("mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4", $user, $pass);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    die("Conexión fallida: " . $e->getMessage());
-}
-?>
-*/
-
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "hospital_huehuetenango"; // Asegúrate de que este sea el nombre correcto de tu base de datos
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    die("Conexión fallida: " . $e->getMessage());
+} catch (PDOException $e) {
+    die("❌ Error de conexión: " . $e->getMessage());
 }
 ?>

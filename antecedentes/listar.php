@@ -1,66 +1,58 @@
 <?php
 require_once __DIR__.'/../includes/auth.php';
-require_role(['admin','secretaria']);
+require_role(['admin','secretaria','medico']);
 require_once __DIR__.'/../includes/conexion.php';
 include __DIR__.'/../templates/header.php';
 
 $q      = trim($_GET['q'] ?? '');
-$scope  = $_GET['scope'] ?? 'today';  // today | day | month | all
+$scope  = $_GET['scope'] ?? 'today';
 $day    = $_GET['day']   ?? date('Y-m-d');
 $month  = $_GET['month'] ?? date('Y-m');
 
-$whereParts = [];
-$params = [];
+$whereParts=[]; $params=[];
 
 // Búsqueda
 if ($q!=='') {
   $like = '%'.str_replace(' ','%',$q).'%';
-  $parts = [
-    "(p.nombre LIKE ? OR p.apellido LIKE ? OR CONCAT(p.nombre,' ',p.apellido) LIKE ?)",
-    "(p.genero LIKE ?)",
-    "(p.motivo LIKE ?)",
-    "(DATE(p.fecha_referencia)=? OR DATE(p.fecha_nacimiento)=?)"
-  ];
-  $params = array_merge($params, [$like,$like,$like,$like,$like,$q,$q]);
-  if (ctype_digit($q) && (int)$q<=120) {
-    $parts[] = "TIMESTAMPDIFF(YEAR,p.fecha_nacimiento,CURDATE()) = ?";
-    $params[] = (int)$q;
-  }
-  $whereParts[] = '(' . implode(' OR ', $parts) . ')';
+  $whereParts[] = "(p.nombre LIKE ? OR p.apellido LIKE ? OR CONCAT(p.nombre,' ',p.apellido) LIKE ?
+                    OR a.tipo LIKE ? OR a.descripcion LIKE ?
+                    OR DATE(a.fecha_registro)=?)";
+  $params = array_merge($params, [$like,$like,$like,$like,$like,$q]);
 }
 
-// Fecha (por defecto hoy)
+// Fecha (por defecto hoy, por fecha_registro)
 switch ($scope) {
   case 'day':
-    $whereParts[] = "DATE(p.fecha_referencia) = ?";
+    $whereParts[] = "DATE(a.fecha_registro) = ?";
     $params[] = preg_match('/^\d{4}-\d{2}-\d{2}$/',$day)?$day:date('Y-m-d');
     break;
   case 'month':
     $first = preg_match('/^\d{4}-\d{2}$/',$month)?($month.'-01'):(date('Y-m').'-01');
-    $whereParts[] = "DATE(p.fecha_referencia) BETWEEN ? AND LAST_DAY(?)";
+    $whereParts[] = "DATE(a.fecha_registro) BETWEEN ? AND LAST_DAY(?)";
     $params[] = $first; $params[] = $first;
     break;
   case 'all':
     break;
   case 'today':
   default:
-    $whereParts[] = "DATE(p.fecha_referencia) = CURDATE()";
+    $whereParts[] = "DATE(a.fecha_registro) = CURDATE()";
     break;
 }
-
 $where = $whereParts ? ('WHERE '.implode(' AND ',$whereParts)) : '';
 
-$sql = "SELECT p.id,p.nombre,p.apellido,p.genero,p.fecha_nacimiento,p.fecha_referencia,p.motivo
-        FROM pacientes p
+$sql = "SELECT a.id, a.tipo, a.descripcion, a.fecha_registro,
+               p.nombre, p.apellido
+        FROM antecedentes a
+        JOIN pacientes p ON p.id = a.paciente_id
         {$where}
-        ORDER BY p.id DESC";
+        ORDER BY a.fecha_registro DESC, a.id DESC";
 $stmt=$conn->prepare($sql); $stmt->execute($params); $rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <div class="topbar">
-  <h2 class="mb-0">Pacientes</h2>
+  <h2 class="mb-0">Antecedentes</h2>
   <div class="d-flex gap-2">
-    <form class="d-flex gap-2" method="get" action="pacientes/listar.php">
-      <input class="form-control" style="min-width:260px" type="search" name="q" placeholder="Buscar por nombre, motivo, fecha, edad..."
+    <form class="d-flex gap-2" method="get" action="antecedentes/listar.php">
+      <input class="form-control" style="min-width:260px" type="search" name="q" placeholder="Buscar por paciente, tipo, descripción, fecha..."
              value="<?= htmlspecialchars($q) ?>">
 
       <select class="form-select" name="scope" onchange="this.form.submit()">
@@ -75,46 +67,45 @@ $stmt=$conn->prepare($sql); $stmt->execute($params); $rows=$stmt->fetchAll(PDO::
 
       <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
       <?php if($q!=='' || $scope!=='today'): ?>
-        <a class="btn btn-outline-dark" href="pacientes/listar.php">Limpiar</a>
+        <a class="btn btn-outline-dark" href="antecedentes/listar.php">Limpiar</a>
       <?php endif; ?>
     </form>
-    <a class="btn btn-primary" href="pacientes/crear.php"><i class="bi bi-plus-circle"></i> Nuevo</a>
+    <a class="btn btn-primary" href="antecedentes/crear.php"><i class="bi bi-plus-circle"></i> Nuevo</a>
   </div>
 </div>
 
-<div class="small-muted mb-2">Se muestran por defecto los pacientes **ingresados hoy**.</div>
+<div class="small-muted mb-2">Se muestran por defecto los **antecedentes de hoy**.</div>
 
 <div class="table-card">
   <div class="table-responsive">
     <table class="table table-hover table-bordered align-middle">
       <thead class="table-primary">
         <tr>
-          <th>Paciente</th><th>Género</th><th>Nacimiento</th><th>Ingreso</th><th>Motivo</th>
+          <th>Fecha</th><th>Paciente</th><th>Tipo</th><th>Descripción</th>
           <th class="no-print" style="width:150px">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <?php foreach($rows as $r): ?>
           <tr>
+            <td><?= htmlspecialchars($r['fecha_registro']) ?></td>
             <td><?= htmlspecialchars($r['nombre'].' '.$r['apellido']) ?></td>
-            <td><?= htmlspecialchars($r['genero']) ?></td>
-            <td><?= htmlspecialchars($r['fecha_nacimiento']) ?></td>
-            <td><?= htmlspecialchars($r['fecha_referencia']) ?></td>
-            <td><?= nl2br(htmlspecialchars($r['motivo'])) ?></td>
+            <td><span class="badge text-bg-secondary"><?= htmlspecialchars($r['tipo']) ?></span></td>
+            <td><?= nl2br(htmlspecialchars($r['descripcion'])) ?></td>
             <td class="no-print">
-              <a class="btn btn-sm btn-outline-secondary" href="pacientes/editar.php?id=<?= $r['id'] ?>">Editar</a>
-              <a class="btn btn-sm btn-outline-danger" href="pacientes/eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar paciente?')">Eliminar</a>
+              <a class="btn btn-sm btn-outline-secondary" href="antecedentes/editar.php?id=<?= $r['id'] ?>">Editar</a>
+              <a class="btn btn-sm btn-outline-danger" href="antecedentes/eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar antecedente?')">Eliminar</a>
             </td>
           </tr>
         <?php endforeach; if(empty($rows)): ?>
-          <tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>
+          <tr><td colspan="5" class="text-center text-muted">Sin resultados</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
   </div>
 
   <!-- Filtros rápidos abajo -->
-  <form class="d-flex gap-2 mt-3 no-print" method="get" action="pacientes/listar.php">
+  <form class="d-flex gap-2 mt-3 no-print" method="get" action="antecedentes/listar.php">
     <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
     <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
     <input class="form-control" type="date"  name="day" value="<?= htmlspecialchars($day) ?>">
@@ -127,8 +118,8 @@ $stmt=$conn->prepare($sql); $stmt->execute($params); $rows=$stmt->fetchAll(PDO::
     <input type="hidden" name="scope" value="month">
     <button class="btn btn-secondary">Ver mes</button>
 
-    <a class="btn btn-outline-dark ms-auto" href="pacientes/listar.php">Hoy</a>
-    <a class="btn btn-outline-dark" href="pacientes/listar.php?scope=all">Todos</a>
+    <a class="btn btn-outline-dark ms-auto" href="antecedentes/listar.php">Hoy</a>
+    <a class="btn btn-outline-dark" href="antecedentes/listar.php?scope=all">Todos</a>
   </form>
 </div>
 <?php include __DIR__.'/../templates/footer.php'; ?>

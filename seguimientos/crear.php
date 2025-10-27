@@ -5,12 +5,6 @@ require_once __DIR__.'/../includes/conexion.php';
 require_once __DIR__.'/../includes/csrf.php';
 require_once __DIR__.'/../includes/config.php';
 
-$id = (int)($_GET['id'] ?? 0);
-$stmt = $conn->prepare("SELECT * FROM seguimientos WHERE id=?");
-$stmt->execute([$id]);
-$s = $stmt->fetch();
-if(!$s){ http_response_code(404); exit('No encontrado'); }
-
 $pacientes = $conn->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre,apellido")->fetchAll(PDO::FETCH_ASSOC);
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
@@ -19,9 +13,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   $resultado = trim($_POST['resultado'] ?? '');
   $proxima_cita = $_POST['proxima_cita'] ?? null;
 
-  $up = $conn->prepare("UPDATE seguimientos SET paciente_id=?, resultado=?, proxima_cita=? WHERE id=?");
-  $up->execute([$paciente_id,$resultado,$proxima_cita,$id]);
-  header('Location: '. (defined('APP_URL')?APP_URL:'') .'seguimientos/listar.php?ok=2'); exit;
+  $stmt = $conn->prepare("INSERT INTO seguimientos (paciente_id,resultado,proxima_cita,fecha_registro) VALUES (?,?,?,NOW())");
+  $stmt->execute([$paciente_id,$resultado,$proxima_cita]);
+  header('Location: '. (defined('APP_URL')?APP_URL:'') .'seguimientos/listar.php?ok=1'); exit;
 }
 
 include __DIR__.'/../templates/header.php';
@@ -30,31 +24,30 @@ include __DIR__.'/../templates/header.php';
 
 <div class="form-page">
   <div class="form-card">
-    <div class="form-card-head">Editar Seguimiento</div>
+    <div class="form-card-head">Nuevo Seguimiento</div>
     <div class="form-card-body">
-      <form method="POST" action="seguimientos/editar.php?id=<?= $s['id'] ?>" class="row g-3">
+      <form method="POST" action="seguimientos/crear.php" class="row g-3">
         <?php csrf_field(); ?>
         <div class="col-12">
           <label class="form-label">Paciente</label>
           <select name="paciente_id" class="form-select" required>
+            <option value="">— Seleccione —</option>
             <?php foreach($pacientes as $p): ?>
-              <option value="<?= $p['id'] ?>" <?= $p['id']==$s['paciente_id']?'selected':'' ?>>
-                <?= htmlspecialchars($p['nombre'].' '.$p['apellido']) ?>
-              </option>
+              <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre'].' '.$p['apellido']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
         <div class="col-12">
           <label class="form-label">Resultado</label>
-          <textarea name="resultado" class="form-control" rows="4" required><?= htmlspecialchars($s['resultado']) ?></textarea>
+          <textarea name="resultado" class="form-control" rows="4" required></textarea>
         </div>
         <div class="col-md-6">
           <label class="form-label">Próxima cita</label>
-          <input type="date" name="proxima_cita" class="form-control" value="<?= htmlspecialchars($s['proxima_cita']) ?>">
+          <input type="date" name="proxima_cita" class="form-control">
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
           <a href="seguimientos/listar.php" class="btn btn-secondary">Cancelar</a>
-          <button class="btn btn-primary" type="submit">Actualizar</button>
+          <button class="btn btn-primary" type="submit">Guardar</button>
         </div>
       </form>
     </div>
