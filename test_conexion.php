@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/includes/conexion.php';
 
 try {
     $stmt = $conexion->query("SELECT username, role FROM usuarios LIMIT 1");
@@ -15,5 +15,3 @@ try {
     echo "❌ Error de conexión: " . $e->getMessage();
 }
 ?>
-
-Agrego test_conexion.php para verificar conexión a base de datos Render
