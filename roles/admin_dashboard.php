@@ -11,8 +11,8 @@ include __DIR__ . '/../templates/header.php';
   <p class="text-muted">Bienvenido, <strong><?= htmlspecialchars($user['username']); ?></strong></p>
 </div>
 
-<!-- Bloque principal -->
-<div class="container">
+<!-- CONTENIDO PRINCIPAL DEL BOTÓN "INICIO" -->
+<div class="container mt-4">
   <div class="card shadow-sm p-4 mb-4">
     <h3 class="text-center text-primary mb-3"><i class="bi bi-hospital"></i> Centro de Salud Sur de Huehuetenango</h3>
     <p class="text-center text-secondary mb-4">
@@ -48,3 +48,4 @@ include __DIR__ . '/../templates/header.php';
 </div>
 
 <?php include __DIR__ . '/../templates/footer.php'; ?>
+
