@@ -37,7 +37,7 @@ $dashboard = APP_URL . 'roles/' . ($rol ?: 'admin') . '_dashboard.php';
 
     .sidebar {
   width: 250px;
-  background: linear-gradient(180deg, #007bff 0%, #009dff 100%);
+  background: linear-gradient(180deg, #0090db 0%, #00bfff 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
