@@ -42,13 +42,15 @@ include __DIR__.'/../templates/header.php';
   <div class="col-lg-6">
     <div class="info-card">
       <h4><span class="icon-pill"><i class="bi bi-flag"></i></span>Misión</h4>
-      <p class="text-muted mb-0">[Pendiente de definir.]</p>
+      <p class="text-muted mb-0">Brindar atención médica eficiente, oportuna y humana a los pacientes de la región, 
+        mediante el uso de herramientas tecnológicas que mejoren la gestión interna del centro de salud.</p>
     </div>
   </div>
   <div class="col-lg-6">
     <div class="info-card">
       <h4><span class="icon-pill"><i class="bi bi-eye"></i></span>Visión</h4>
-      <p class="text-muted mb-0">[Pendiente de definir.]</p>
+      <p class="text-muted mb-0">Ser un referente regional en innovación tecnológica aplicada a la salud pública,
+        optimizando los procesos médicos y administrativos para un mejor servicio a la comunidad.</p>
     </div>
   </div>
 </div>
