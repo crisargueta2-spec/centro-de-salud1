@@ -1,12 +1,13 @@
 <?php
-echo "<pre>";
-print_r(scandir(__DIR__));
-echo "</pre>";
+echo "<h3>📂 Archivos reales en /var/www/html:</h3><pre>";
+$root = '/var/www/html';
+print_r(scandir($root));
 
-if (is_dir(__DIR__ . '/roles')) {
-    echo "\n\nContenido de /roles:\n";
-    print_r(scandir(__DIR__ . '/roles'));
+echo "\n\n📁 Contenido de includes/: \n";
+if (is_dir("$root/includes")) {
+    print_r(scandir("$root/includes"));
 } else {
-    echo "\n\n❌ No existe la carpeta /roles en este deploy.";
+    echo "No existe la carpeta includes/";
 }
+echo "</pre>";
 ?>
