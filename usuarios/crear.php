@@ -6,7 +6,7 @@ require_once __DIR__.'/../includes/csrf.php';
 require_once __DIR__.'/../includes/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (!csrf_validate($_POST['csrf'] ?? '')) { http_response_code(400); exit('CSRF'); }
+  if (!csrf_verify($_POST['csrf'] ?? '')) { http_response_code(400); exit('CSRF'); }
   $username = trim($_POST['username'] ?? '');
   $password = $_POST['password'] ?? '';
   $role     = $_POST['role'] ?? 'secretaria';
