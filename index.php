@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/csrf.php';
 
-// Si el usuario ya está logueado, redirigir según el rol
+// Si el usuario ya inició sesión, redirigir según el rol
 if (is_logged_in()) {
     redirect_by_role($_SESSION['user']['rol']);
     exit;
@@ -18,11 +18,12 @@ if (is_logged_in()) {
   <title>Centro de Salud Sur - Iniciar sesión</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
   <style>
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
-      background-color: #f8f9fa;
+      background-color: #f1f3f4;
       height: 100vh;
       display: flex;
       align-items: center;
@@ -31,24 +32,26 @@ if (is_logged_in()) {
 
     .login-wrapper {
       display: flex;
+      flex-wrap: wrap;
       background: #fff;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 5px 25px rgba(0,0,0,0.1);
       border-radius: 15px;
       overflow: hidden;
       max-width: 900px;
       width: 100%;
+      min-height: 500px;
     }
 
     .login-left {
       background-color: #007a78;
       color: #fff;
-      flex: 1;
+      flex: 1 1 45%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      text-align: center;
       padding: 40px 20px;
+      text-align: center;
     }
 
     .login-left img {
@@ -67,8 +70,9 @@ if (is_logged_in()) {
     }
 
     .login-right {
-      flex: 1;
-      padding: 40px 50px;
+      flex: 1 1 55%;
+      background-color: #ffffff;
+      padding: 50px 45px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -82,16 +86,32 @@ if (is_logged_in()) {
 
     .form-control {
       border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-size: 1rem;
+      background: #fff !important;
+      color: #000 !important;
+      z-index: 5;
+      position: relative;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #007a78;
+      box-shadow: 0 0 3px #007a78;
     }
 
     .btn-primary {
       background-color: #007a78;
       border: none;
       border-radius: 8px;
+      padding: 10px;
+      font-weight: 600;
+      font-size: 1rem;
     }
 
     .btn-primary:hover {
-      background-color: #00605e;
+      background-color: #00625f;
     }
 
     .alert {
@@ -113,19 +133,19 @@ if (is_logged_in()) {
     <!-- PANEL DERECHO -->
     <div class="login-right">
       <h3><i class="bi bi-person-circle"></i> Iniciar sesión</h3>
-      <p class="text-muted">Por favor, inicia sesión para continuar.</p>
+      <p class="text-muted mb-4">Por favor, inicia sesión para continuar.</p>
 
-      <form action="login.php" method="POST">
+      <form action="login.php" method="POST" autocomplete="off">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()); ?>">
 
         <div class="mb-3">
           <label class="form-label">Usuario</label>
-          <input type="text" class="form-control" name="username" required>
+          <input type="text" class="form-control" name="username" placeholder="Ingrese su usuario" required>
         </div>
 
         <div class="mb-3">
           <label class="form-label">Contraseña</label>
-          <input type="password" class="form-control" name="password" required>
+          <input type="password" class="form-control" name="password" placeholder="Ingrese su contraseña" required>
         </div>
 
         <?php if (!empty($_GET['err'])): ?>
@@ -151,3 +171,4 @@ if (is_logged_in()) {
   </div>
 </body>
 </html>
+
