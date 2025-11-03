@@ -35,12 +35,10 @@ $dashboard = APP_URL . 'roles/' . ($rol ?: 'admin') . '_dashboard.php';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Estilos generales -->
   <style>
     html, body { min-height:100%; }
     body { display:flex; margin:0; background:#f5f5f5; }
 
-    /* SIDEBAR */
     .sidebar {
       width:250px; background:#007a78; color:#fff;
       padding:20px 0; flex:0 0 250px; min-height:100vh;
@@ -53,4 +51,32 @@ $dashboard = APP_URL . 'roles/' . ($rol ?: 'admin') . '_dashboard.php';
       font-weight:800; font-size:1.1rem;
     }
     .sidebar a {
-      color:#fff; text-dec
+      color:#fff;
+      text-decoration:none;
+      display:block;
+      padding:10px 20px;
+    }
+    .sidebar a:hover, .sidebar a.active {
+      background:rgba(255,255,255,0.2);
+    }
+    main {
+      flex:1;
+      padding:20px;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="bi bi-hospital-fill"></i> Centro de Salud
+    </div>
+    <nav>
+      <a href="<?= $dashboard ?>" class="<?= $active('dashboard') ?>">Inicio</a>
+      <?php if ($canPacientes): ?><a href="<?= APP_URL ?>pacientes/listar.php">Pacientes</a><?php endif; ?>
+      <?php if ($canAsignaciones): ?><a href="<?= APP_URL ?>asignaciones/listar.php">Asignaciones</a><?php endif; ?>
+      <?php if ($canUsuarios): ?><a href="<?= APP_URL ?>usuarios/listar.php">Usuarios</a><?php endif; ?>
+      <a href="<?= APP_URL ?>logout.php" class="text-danger">Salir</a>
+    </nav>
+  </aside>
+
+  <main>
