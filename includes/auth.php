@@ -63,5 +63,4 @@ function redirect_by_role(string $role): void {
     }
     exit;
 }
-?>
 
