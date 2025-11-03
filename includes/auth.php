@@ -16,7 +16,7 @@ function user(): ?array {
 }
 
 /**
- * Requiere que el usuario esté logueado,
+ * Requiere que el usuario haya iniciado sesión,
  * o redirige al index (login)
  */
 function require_login(): void {
@@ -27,22 +27,27 @@ function require_login(): void {
 }
 
 /**
- * Requiere un rol específico
- * (por ejemplo: require_role('admin');)
+ * Requiere un rol específico (o varios)
+ * Ejemplo:
+ *   require_role('admin');
+ *   require_role(['admin', 'medico']);
  */
-function require_role(string $role): void {
+function require_role(string|array $role): void {
     require_login();
     $user = user();
     $rolUsuario = strtolower($user['rol'] ?? ($user['role'] ?? ''));
 
-    if ($rolUsuario !== strtolower($role)) {
+    // Convertir $role a array si es string
+    $rolesPermitidos = is_array($role) ? array_map('strtolower', $role) : [strtolower($role)];
+
+    if (!in_array($rolUsuario, $rolesPermitidos)) {
         header('Location: /index.php?err=unauthorized');
         exit;
     }
 }
 
 /**
- * Redirige al dashboard correspondiente según el rol
+ * Redirige al dashboard correspondiente según el rol del usuario
  */
 function redirect_by_role(string $role): void {
     $role = strtolower($role);
@@ -63,4 +68,3 @@ function redirect_by_role(string $role): void {
     }
     exit;
 }
-
