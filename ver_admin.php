@@ -1,4 +1,5 @@
 <?php
+echo "Archivo ver_admin.php cargado correctamente<br>";
 require_once __DIR__ . '/includes/conexion.php';
 
 try {
@@ -12,3 +13,4 @@ try {
     echo "❌ Error: " . $e->getMessage();
 }
 ?>
+    
