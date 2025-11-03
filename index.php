@@ -2,14 +2,13 @@
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/csrf.php';
 
-// Si hay sesión activa, redirige según el rol
+// Si ya hay sesión iniciada, redirigir por rol
 if (is_logged_in()) {
     redirect_by_role($_SESSION['user']['rol']);
     exit;
 }
-
-// Si no hay sesión, mostrar el login
 ?>
 
 <!doctype html>
@@ -29,7 +28,6 @@ if (is_logged_in()) {
       display: flex;
       justify-content: center;
       align-items: center;
-      color: #333;
     }
     .login-card {
       background: #fff;
@@ -54,19 +52,12 @@ if (is_logged_in()) {
     .form-label {
       font-weight: 500;
     }
-    .small-muted {
-      color: #777;
-      font-size: 0.9rem;
-      text-align: center;
-      margin-top: 1rem;
-    }
   </style>
 </head>
 <body>
-
   <div class="login-card">
     <h3><i class="bi bi-hospital"></i> Centro de Salud Sur</h3>
-    <p class="text-center small-muted mb-4">Inicie sesión para continuar</p>
+    <p class="text-center text-muted mb-4">Inicie sesión para continuar</p>
 
     <form action="login.php" method="POST">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()); ?>">
@@ -97,12 +88,6 @@ if (is_logged_in()) {
         </button>
       </div>
     </form>
-
-    <div class="small-muted mt-4">
-      <p>Centro de Salud Sur de Huehuetenango<br>
-      <small>Sistema de gestión médica</small></p>
-    </div>
   </div>
-
 </body>
 </html>
