@@ -1,18 +1,23 @@
 <?php
-// 🧠 Sesión segura, compatible con cualquier contexto (Render o local)
+// 🧠 Sesión persistente para entornos como Render
 
-// Si la sesión ya está activa, no hacer nada
+// Directorio temporal donde PHP puede guardar las sesiones
+$sessionPath = sys_get_temp_dir();
+if (!is_writable($sessionPath)) {
+    $sessionPath = '/tmp'; // fallback por si acaso
+}
+session_save_path($sessionPath);
+
+// Configuración de seguridad
+ini_set('session.gc_maxlifetime', 3600);
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_strict_mode', 1);
+ini_set('session.use_only_cookies', 1);
+session_name('centro_salud_session');
+
+// Evitar re-iniciar si ya está activa
 if (session_status() === PHP_SESSION_NONE) {
-    // Configurar solo si los headers no fueron enviados
-    if (!headers_sent()) {
-        ini_set('session.cookie_httponly', 1);
-        ini_set('session.use_strict_mode', 1);
-        ini_set('session.use_only_cookies', 1);
-        session_name('centro_salud_session');
-        session_start();
-    } else {
-        // Si ya se enviaron headers, intenta recuperar sesión existente
-        @session_start();
-    }
+    @session_start();
 }
 ?>
+
