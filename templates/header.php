@@ -36,14 +36,14 @@ $dashboard = APP_URL . 'roles/' . ($rol ?: 'admin') . '_dashboard.php';
     }
 
     .sidebar {
-      width: 250px;
-      background: linear-gradient(180deg, #006d6d 0%, #008080 100%);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      padding: 20px 0;
-      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-    }
+  width: 250px;
+  background: linear-gradient(180deg, #007bff 0%, #009dff 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+}
 
     .sidebar .brand {
       font-size: 1.3rem;
