@@ -1,34 +1,39 @@
 <?php
-// Evitar redirecciones automáticas
 ob_start();
 
-echo "<h2>🧩 Diagnóstico del flujo de salida</h2>";
+echo "<h2>🧩 Diagnóstico avanzado del flujo de salida</h2>";
 
-function safe_include($file) {
-    echo "<p>🔹 Intentando incluir: <strong>$file</strong></p>";
-    if (file_exists($file)) {
-        echo "✅ Archivo encontrado<br>";
-        try {
-            include $file;
-            echo "<p>✅ Incluido correctamente: $file</p>";
-        } catch (Throwable $e) {
-            echo "<p>❌ Error al incluir $file: " . $e->getMessage() . "</p>";
-        }
-    } else {
-        echo "❌ No se encontró: $file<br>";
+function debug_include($file) {
+    echo "<hr><h3>📄 Probando incluir: $file</h3>";
+    if (!file_exists($file)) {
+        echo "❌ No se encontró el archivo.<br>";
+        return;
+    }
+
+    echo "✅ Archivo encontrado.<br>";
+    try {
+        include $file;
+        echo "<p>✅ Inclusión exitosa de: $file</p>";
+    } catch (Throwable $e) {
+        echo "<p style='color:red'>❌ Error al incluir $file: " . $e->getMessage() . "</p>";
     }
 }
 
-$dashboard = __DIR__ . '/roles/admin_dashboard.php';
-$header = __DIR__ . '/templates/header.php';
-$footer = __DIR__ . '/templates/footer.php';
+// 1️⃣ Header
+debug_include(__DIR__ . '/templates/header.php');
 
-safe_include($header);
-echo "<hr>";
-safe_include($dashboard);
-echo "<hr>";
-safe_include($footer);
+// 2️⃣ Dashboard
+echo "<hr><h3>🧩 Incluyendo dashboard...</h3>";
+try {
+    require_once __DIR__ . '/roles/admin_dashboard.php';
+    echo "<p>✅ admin_dashboard.php ejecutado completamente.</p>";
+} catch (Throwable $e) {
+    echo "<p style='color:red'>❌ Error dentro de admin_dashboard.php: " . $e->getMessage() . "</p>";
+}
 
-echo "<h3>✅ Diagnóstico finalizado</h3>";
+// 3️⃣ Footer
+debug_include(__DIR__ . '/templates/footer.php');
+
+echo "<hr><h2>✅ Diagnóstico completado</h2>";
 ob_end_flush();
 ?>
