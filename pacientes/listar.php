@@ -1,11 +1,11 @@
 <?php
-require_once __DIR__.'/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_role(['admin','secretaria']);
-require_once __DIR__.'/../includes/conexion.php';
-include __DIR__.'/../templates/header.php';
+require_once __DIR__ . '/../includes/conexion.php';
+include __DIR__ . '/../templates/header.php';
 
 $q      = trim($_GET['q'] ?? '');
-$scope  = $_GET['scope'] ?? 'today';  // today | day | month | all
+$scope  = $_GET['scope'] ?? 'today';
 $day    = $_GET['day']   ?? date('Y-m-d');
 $month  = $_GET['month'] ?? date('Y-m');
 
@@ -13,36 +13,45 @@ $whereParts = [];
 $params = [];
 
 // Búsqueda
-if ($q!=='') {
+if ($q !== '') {
   $like = '%'.str_replace(' ','%',$q).'%';
   $parts = [
     "(p.nombre LIKE ? OR p.apellido LIKE ? OR CONCAT(p.nombre,' ',p.apellido) LIKE ?)",
     "(p.genero LIKE ?)",
-    "(p.motivo LIKE ?)",
-    "(DATE(p.fecha_referencia)=? OR DATE(p.fecha_nacimiento)=?)"
+    "(p.motivo LIKE ?)"
   ];
-  $params = array_merge($params, [$like,$like,$like,$like,$like,$q,$q]);
-  if (ctype_digit($q) && (int)$q<=120) {
+
+  // Si el texto parece una fecha válida (YYYY-MM-DD), solo entonces filtra por fecha
+  if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $q)) {
+    $parts[] = "(DATE(p.fecha_referencia)=? OR DATE(p.fecha_nacimiento)=?)";
+    $params[] = $q;
+    $params[] = $q;
+  }
+
+  $params = array_merge([$like,$like,$like,$like,$like], $params);
+
+  // Si el texto es numérico pequeño, buscar por edad
+  if (ctype_digit($q) && (int)$q <= 120) {
     $parts[] = "TIMESTAMPDIFF(YEAR,p.fecha_nacimiento,CURDATE()) = ?";
     $params[] = (int)$q;
   }
+
   $whereParts[] = '(' . implode(' OR ', $parts) . ')';
 }
 
-// Fecha (por defecto hoy)
+// Filtro de fecha
 switch ($scope) {
   case 'day':
     $whereParts[] = "DATE(p.fecha_referencia) = ?";
-    $params[] = preg_match('/^\d{4}-\d{2}-\d{2}$/',$day)?$day:date('Y-m-d');
+    $params[] = preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) ? $day : date('Y-m-d');
     break;
   case 'month':
-    $first = preg_match('/^\d{4}-\d{2}$/',$month)?($month.'-01'):(date('Y-m').'-01');
+    $first = preg_match('/^\d{4}-\d{2}$/', $month) ? ($month.'-01') : (date('Y-m').'-01');
     $whereParts[] = "DATE(p.fecha_referencia) BETWEEN ? AND LAST_DAY(?)";
     $params[] = $first; $params[] = $first;
     break;
   case 'all':
     break;
-  case 'today':
   default:
     $whereParts[] = "DATE(p.fecha_referencia) = CURDATE()";
     break;
@@ -54,13 +63,15 @@ $sql = "SELECT p.id,p.nombre,p.apellido,p.genero,p.fecha_nacimiento,p.fecha_refe
         FROM pacientes p
         {$where}
         ORDER BY p.id DESC";
-$stmt=$conn->prepare($sql); $stmt->execute($params); $rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare($sql);
+$stmt->execute($params);
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <div class="topbar">
   <h2 class="mb-0">Pacientes</h2>
   <div class="d-flex gap-2">
     <form class="d-flex gap-2" method="get" action="pacientes/listar.php">
-      <input class="form-control" style="min-width:260px" type="search" name="q" placeholder="Buscar por nombre, motivo, fecha, edad..."
+      <input class="form-control" style="min-width:260px" type="search" name="q" placeholder="Buscar por nombre, motivo, edad o fecha (YYYY-MM-DD)..."
              value="<?= htmlspecialchars($q) ?>">
 
       <select class="form-select" name="scope" onchange="this.form.submit()">
@@ -82,7 +93,7 @@ $stmt=$conn->prepare($sql); $stmt->execute($params); $rows=$stmt->fetchAll(PDO::
   </div>
 </div>
 
-<div class="small-muted mb-2">Se muestran por defecto los pacientes **ingresados hoy**.</div>
+<div class="small-muted mb-2">Se muestran por defecto los pacientes ingresados hoy.</div>
 
 <div class="table-card">
   <div class="table-responsive">
@@ -112,23 +123,7 @@ $stmt=$conn->prepare($sql); $stmt->execute($params); $rows=$stmt->fetchAll(PDO::
       </tbody>
     </table>
   </div>
-
-  <!-- Filtros rápidos abajo -->
-  <form class="d-flex gap-2 mt-3 no-print" method="get" action="pacientes/listar.php">
-    <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
-    <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
-    <input class="form-control" type="date"  name="day" value="<?= htmlspecialchars($day) ?>">
-    <input type="hidden" name="scope" value="day">
-    <button class="btn btn-secondary">Ver día</button>
-
-    <div class="vr mx-2"></div>
-
-    <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>">
-    <input type="hidden" name="scope" value="month">
-    <button class="btn btn-secondary">Ver mes</button>
-
-    <a class="btn btn-outline-dark ms-auto" href="pacientes/listar.php">Hoy</a>
-    <a class="btn btn-outline-dark" href="pacientes/listar.php?scope=all">Todos</a>
-  </form>
 </div>
+
 <?php include __DIR__.'/../templates/footer.php'; ?>
+
