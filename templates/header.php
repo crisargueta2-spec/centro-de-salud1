@@ -10,17 +10,7 @@ $active = function (string $needle) use ($uri) {
   return (strpos($uri, $needle) !== false) ? 'active' : '';
 };
 
-// Permisos por rol
-$canUsuarios       = ($rol === 'admin');
-$canPacientes      = in_array($rol, ['admin','secretaria']);
-$canAntecedentes   = in_array($rol, ['admin','secretaria','medico']);
-$canEspecialistas  = in_array($rol, ['admin','secretaria']);
-$canAsignaciones   = in_array($rol, ['admin','secretaria','medico']);
-$canSeguimientos   = in_array($rol, ['admin','medico']);
-$canTratamientos   = in_array($rol, ['admin','medico']);
-$canRecetas        = in_array($rol, ['admin','secretaria','medico']);
-$canHistorial      = in_array($rol, ['admin','secretaria','medico']);
-
+// Dashboard base
 $dashboard = APP_URL . 'roles/' . ($rol ?: 'admin') . '_dashboard.php';
 ?>
 <!doctype html>
@@ -35,48 +25,86 @@ $dashboard = APP_URL . 'roles/' . ($rol ?: 'admin') . '_dashboard.php';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+  <!-- Estilos originales -->
   <style>
-    html, body { min-height:100%; }
-    body { display:flex; margin:0; background:#f5f5f5; }
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+    }
 
     .sidebar {
-      width:250px; background:#007a78; color:#fff;
-      padding:20px 0; flex:0 0 250px; min-height:100vh;
-      position:sticky; top:0;
-      box-shadow:0 2px 10px rgba(0,0,0,.1);
+      width: 250px;
+      background: linear-gradient(180deg, #006d6d 0%, #008080 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
     }
+
     .sidebar .brand {
-      padding:0 20px 12px;
-      display:flex; align-items:center; gap:10px;
-      font-weight:800; font-size:1.1rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      text-align: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
     }
+
     .sidebar a {
-      color:#fff;
-      text-decoration:none;
-      display:block;
-      padding:10px 20px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      text-decoration: none;
+      transition: background 0.2s;
+      font-weight: 500;
     }
-    .sidebar a:hover, .sidebar a.active {
-      background:rgba(255,255,255,0.2);
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: rgba(255,255,255,0.1);
     }
+
+    .sidebar i {
+      font-size: 1.2rem;
+    }
+
     main {
-      flex:1;
-      padding:20px;
+      flex: 1;
+      padding: 30px;
+      background-color: #f9f9f9;
+    }
+
+    .page-head h1 {
+      font-weight: 700;
+      color: #007a78;
     }
   </style>
 </head>
+
 <body>
-  <aside class="sidebar">
+  <div class="sidebar">
     <div class="brand">
-      <i class="bi bi-hospital-fill"></i> Centro de Salud
+      <i class="bi bi-hospital"></i> Centro de Salud Sur
     </div>
-    <nav>
-      <a href="<?= $dashboard ?>" class="<?= $active('dashboard') ?>">Inicio</a>
-      <?php if ($canPacientes): ?><a href="<?= APP_URL ?>pacientes/listar.php">Pacientes</a><?php endif; ?>
-      <?php if ($canAsignaciones): ?><a href="<?= APP_URL ?>asignaciones/listar.php">Asignaciones</a><?php endif; ?>
-      <?php if ($canUsuarios): ?><a href="<?= APP_URL ?>usuarios/listar.php">Usuarios</a><?php endif; ?>
-      <a href="<?= APP_URL ?>logout.php" class="text-danger">Salir</a>
-    </nav>
-  </aside>
+
+    <a href="<?= $dashboard ?>" class="<?= $active('dashboard') ?>"><i class="bi bi-speedometer2"></i> Inicio</a>
+    <a href="<?= APP_URL ?>pacientes/listar.php" class="<?= $active('pacientes') ?>"><i class="bi bi-person-vcard-fill"></i> Pacientes</a>
+    <a href="<?= APP_URL ?>asignaciones/listar.php" class="<?= $active('asignaciones') ?>"><i class="bi bi-journal-text"></i> Asignaciones</a>
+    <a href="<?= APP_URL ?>usuarios/listar.php" class="<?= $active('usuarios') ?>"><i class="bi bi-people-fill"></i> Usuarios</a>
+    <a href="<?= APP_URL ?>antecedentes/listar.php" class="<?= $active('antecedentes') ?>"><i class="bi bi-clipboard-heart"></i> Antecedentes</a>
+    <a href="<?= APP_URL ?>especialista/listar.php" class="<?= $active('especialista') ?>"><i class="bi bi-person-badge-fill"></i> Especialistas</a>
+    <a href="<?= APP_URL ?>recetas/listar.php" class="<?= $active('recetas') ?>"><i class="bi bi-capsule-pill"></i> Recetas</a>
+    <a href="<?= APP_URL ?>seguimientos/listar.php" class="<?= $active('seguimientos') ?>"><i class="bi bi-activity"></i> Seguimientos</a>
+    <a href="<?= APP_URL ?>tratamientos/listar.php" class="<?= $active('tratamientos') ?>"><i class="bi bi-heart-pulse-fill"></i> Tratamientos</a>
+    <a href="<?= APP_URL ?>historial/listar.php" class="<?= $active('historial') ?>"><i class="bi bi-archive-fill"></i> Historial</a>
+
+    <hr class="text-light mx-3">
+    <a href="<?= APP_URL ?>logout.php"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
+  </div>
 
   <main>
