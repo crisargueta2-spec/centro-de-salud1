@@ -1,12 +1,11 @@
 <?php
-require_once __DIR__ . '/includes/config.php';
-require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/csrf.php';
 
-// Si el usuario ya inició sesión, redirigir según el rol
-if (is_logged_in()) {
-    redirect_by_role($_SESSION['user']['rol']);
+// Corregido: función actual usada en tu auth.php
+if (function_exists('is_logged_in') ? is_logged_in() : is_logged()) {
+    $user = function_exists('user') ? user() : $_SESSION['user'];
+    redirect_by_role($user['rol'] ?? $user['role'] ?? 'admin');
     exit;
 }
 ?>
@@ -14,161 +13,155 @@ if (is_logged_in()) {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Centro de Salud Sur - Iniciar sesión</title>
+  <title>Iniciar sesión — Centro de Salud Sur</title>
+  <!-- 🔧 Ajuste de base href para que funcione en Render y local -->
+  <base href="./">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
   <style>
+    :root {
+      --teal: #007a78;
+      --teal-700: #046e6c;
+      --shadow: 0 4px 14px rgba(0,0,0,.14);
+      --radius: 18px;
+    }
+
     body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: #f1f3f4;
-      height: 100vh;
+      background: #f8f9fa;
+    }
+
+    .login-page {
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 24px;
     }
 
-    .login-wrapper {
+    .login-card {
       display: flex;
-      flex-wrap: wrap;
-      background: #fff;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.1);
-      border-radius: 15px;
       overflow: hidden;
-      max-width: 900px;
+      border: 0;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width: 980px;
       width: 100%;
-      min-height: 500px;
+      background: #fff;
     }
 
     .login-left {
-      background-color: #007a78;
+      background: var(--teal);
       color: #fff;
-      flex: 1 1 45%;
+      padding: 48px 32px;
+      width: 42%;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      padding: 40px 20px;
+      justify-content: center;
       text-align: center;
     }
 
-    .login-left img {
-      width: 160px;
-      margin-bottom: 25px;
+    .login-left .logo {
+      width: 180px;
+      height: auto;
+      object-fit: contain;
+      margin-bottom: 18px;
     }
 
-    .login-left h2 {
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .login-left p {
-      font-size: 0.95rem;
-      opacity: 0.9;
+    .login-left .fallback-icon {
+      font-size: 86px;
+      opacity: .95;
+      margin-bottom: 14px;
     }
 
     .login-right {
-      flex: 1 1 55%;
-      background-color: #ffffff;
-      padding: 50px 45px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      padding: 40px 36px;
+      width: 58%;
+      background: #fff;
     }
 
-    .login-right h3 {
-      color: #006b69;
-      font-weight: 700;
-      margin-bottom: 10px;
+    .login-title {
+      color: var(--teal);
+      font-weight: 800;
     }
 
     .form-control {
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      padding: 10px;
-      font-size: 1rem;
-      background: #fff !important;
-      color: #000 !important;
-      z-index: 5;
-      position: relative;
+      border-radius: 0;
+      border: 0;
+      border-bottom: 1px solid #ced4da;
+      padding-left: 0;
+      padding-right: 0;
+      background-color: #fff;
+      color: #000;
     }
 
     .form-control:focus {
-      outline: none;
-      border-color: #007a78;
-      box-shadow: 0 0 3px #007a78;
+      box-shadow: none;
+      border-color: var(--teal);
     }
 
-    .btn-primary {
-      background-color: #007a78;
-      border: none;
-      border-radius: 8px;
-      padding: 10px;
-      font-weight: 600;
-      font-size: 1rem;
-    }
-
-    .btn-primary:hover {
-      background-color: #00625f;
+    .btn-outline-teal {
+      --bs-btn-color: var(--teal);
+      --bs-btn-border-color: var(--teal);
+      --bs-btn-hover-bg: var(--teal);
+      --bs-btn-hover-border-color: var(--teal);
+      --bs-btn-hover-color: #fff;
+      --bs-btn-active-bg: var(--teal-700);
+      --bs-btn-active-border-color: var(--teal-700);
     }
 
     .alert {
-      font-size: 0.9rem;
-      padding: 6px 10px;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 992px) {
+      .login-card { flex-direction: column; }
+      .login-left, .login-right { width: 100%; }
+      .login-left { padding: 34px 28px; }
     }
   </style>
 </head>
-
 <body>
-  <div class="login-wrapper">
-    <!-- PANEL IZQUIERDO -->
+<main class="login-page">
+  <div class="login-card">
     <div class="login-left">
-      <img src="img/logo.png" alt="Logo del Centro de Salud Sur">
-      <h2><i class="bi bi-hospital"></i> Centro de Salud Sur</h2>
-      <p>Sistema de Gestión</p>
+      <img src="img/logo.png" alt="Logo Centro de Salud" class="logo" onerror="this.style.display='none'">
+      <i class="bi bi-hospital-fill fallback-icon"></i>
+      <h4>Centro de Salud Sur</h4>
+      <p class="mb-0" style="opacity:.95">Sistema de Gestión</p>
     </div>
 
-    <!-- PANEL DERECHO -->
     <div class="login-right">
-      <h3><i class="bi bi-person-circle"></i> Iniciar sesión</h3>
-      <p class="text-muted mb-4">Por favor, inicia sesión para continuar.</p>
+      <h3 class="text-center mb-4 login-title">Iniciar sesión</h3>
 
-      <form action="login.php" method="POST" autocomplete="off">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()); ?>">
+      <?php if (!empty($_GET['err'])): ?>
+        <div class="alert alert-danger">Usuario o contraseña inválidos.</div>
+      <?php elseif (!empty($_GET['msg']) && $_GET['msg'] === 'login'): ?>
+        <div class="alert alert-success">Por favor, inicia sesión para continuar.</div>
+      <?php elseif (!empty($_GET['msg']) && $_GET['msg'] === 'logout'): ?>
+        <div class="alert alert-info">Sesión cerrada correctamente. Puedes iniciar nuevamente.</div>
+      <?php endif; ?>
 
+      <form action="login.php" method="POST" novalidate autocomplete="off">
+        <?php if (function_exists('csrf_field')) { csrf_field(); } ?>
         <div class="mb-3">
-          <label class="form-label">Usuario</label>
-          <input type="text" class="form-control" name="username" placeholder="Ingrese su usuario" required>
+          <input type="text" class="form-control" placeholder="Usuario" name="username" required autocomplete="username">
         </div>
-
-        <div class="mb-3">
-          <label class="form-label">Contraseña</label>
-          <input type="password" class="form-control" name="password" placeholder="Ingrese su contraseña" required>
+        <div class="mb-2">
+          <input type="password" class="form-control" placeholder="Contraseña" name="password" required autocomplete="current-password">
         </div>
-
-        <?php if (!empty($_GET['err'])): ?>
-          <div class="alert alert-danger mt-2">
-            <?php
-              if ($_GET['err'] === 'invalid') echo 'Usuario o contraseña incorrectos.';
-              elseif ($_GET['err'] === 'csrf') echo 'Error de seguridad, intente nuevamente.';
-              elseif ($_GET['err'] === 'db') echo 'Error interno en la base de datos.';
-            ?>
-          </div>
-        <?php endif; ?>
-
-        <div class="form-check mb-3">
-          <input class="form-check-input" type="checkbox" id="remember">
-          <label class="form-check-label" for="remember">Recordarme</label>
+        <div class="form-check mb-4">
+          <input class="form-check-input" type="checkbox" value="1" id="remember">
+          <label class="form-check-label" for="remember"><strong>Recordarme</strong></label>
         </div>
-
-        <button type="submit" class="btn btn-primary w-100">
-          <i class="bi bi-box-arrow-in-right"></i> Entrar
-        </button>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-outline-teal">Entrar</button>
+        </div>
       </form>
     </div>
   </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 
