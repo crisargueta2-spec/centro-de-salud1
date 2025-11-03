@@ -2,6 +2,7 @@
 require_once __DIR__.'/../includes/auth.php';
 require_role(['admin','secretaria']);
 require_once __DIR__.'/../includes/conexion.php';
+require_once __DIR__.'/../includes/csrf.php';
 
 $id = (int)($_GET['id'] ?? 0);
 if (!$id) { header('Location: ../pacientes/listar.php?err=1'); exit; }
@@ -19,10 +20,11 @@ try {
   $stmt->execute([$id]);
 
   $conn->commit();
-  header('Location: ../pacientes/listar.php?ok=3');  // <-- aquí el cambio
+  header('Location: ../pacientes/listar.php?ok=3');
   exit;
 } catch (Throwable $e) {
   if ($conn->inTransaction()) { $conn->rollBack(); }
-  header('Location: ../pacientes/listar.php?err=fk'); // <-- y aquí también
+  header('Location: ../pacientes/listar.php?err=fk');
   exit;
 }
+?>
