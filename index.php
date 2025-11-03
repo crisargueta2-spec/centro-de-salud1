@@ -1,12 +1,10 @@
 <?php
-require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/includes/csrf.php';
+require_once __DIR__.'/includes/auth.php';
+require_once __DIR__.'/includes/csrf.php';
 
-// Corregido: función actual usada en tu auth.php
-if (function_exists('is_logged_in') ? is_logged_in() : is_logged()) {
-    $user = function_exists('user') ? user() : $_SESSION['user'];
-    redirect_by_role($user['rol'] ?? $user['role'] ?? 'admin');
-    exit;
+// Si ya hay sesión activa, redirige al dashboard correspondiente
+if (is_logged()) {
+    redirect_by_role(user()['rol']);
 }
 ?>
 <!DOCTYPE html>
@@ -14,110 +12,56 @@ if (function_exists('is_logged_in') ? is_logged_in() : is_logged()) {
 <head>
   <meta charset="UTF-8">
   <title>Iniciar sesión — Centro de Salud Sur</title>
-  <!-- 🔧 Ajuste de base href para que funcione en Render y local -->
   <base href="./">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    :root {
-      --teal: #007a78;
-      --teal-700: #046e6c;
-      --shadow: 0 4px 14px rgba(0,0,0,.14);
-      --radius: 18px;
+    :root{
+      --teal:#007a78;
+      --teal-700:#046e6c;
+      --shadow:0 4px 14px rgba(0,0,0,.14);
+      --radius:18px;
     }
-
-    body {
-      background: #f8f9fa;
+    body{ background:#f8f9fa; }
+    .login-page{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .login-card{
+      display:flex; overflow:hidden; border:0; border-radius:var(--radius);
+      box-shadow:var(--shadow); max-width:980px; width:100%; background:#fff;
     }
-
-    .login-page {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+    .login-left{
+      background:var(--teal); color:#fff; padding:48px 32px;
+      width:42%; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center;
     }
-
-    .login-card {
-      display: flex;
-      overflow: hidden;
-      border: 0;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      max-width: 980px;
-      width: 100%;
-      background: #fff;
+    .login-left .logo{
+      width:180px; height:auto; object-fit:contain; margin-bottom:18px;
     }
-
-    .login-left {
-      background: var(--teal);
-      color: #fff;
-      padding: 48px 32px;
-      width: 42%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
+    .login-left .fallback-icon{
+      font-size:86px; opacity:.95; margin-bottom:14px;
     }
-
-    .login-left .logo {
-      width: 180px;
-      height: auto;
-      object-fit: contain;
-      margin-bottom: 18px;
+    .login-right{ padding:40px 36px; width:58%; background:#fff }
+    .login-title{ color:var(--teal); font-weight:800; }
+    .form-control{
+      border-radius:0; border:0; border-bottom:1px solid #ced4da;
+      padding-left:0; padding-right:0;
     }
-
-    .login-left .fallback-icon {
-      font-size: 86px;
-      opacity: .95;
-      margin-bottom: 14px;
+    .form-control:focus{
+      box-shadow:none; border-color:var(--teal);
     }
-
-    .login-right {
-      padding: 40px 36px;
-      width: 58%;
-      background: #fff;
-    }
-
-    .login-title {
-      color: var(--teal);
-      font-weight: 800;
-    }
-
-    .form-control {
-      border-radius: 0;
-      border: 0;
-      border-bottom: 1px solid #ced4da;
-      padding-left: 0;
-      padding-right: 0;
-      background-color: #fff;
-      color: #000;
-    }
-
-    .form-control:focus {
-      box-shadow: none;
-      border-color: var(--teal);
-    }
-
-    .btn-outline-teal {
+    .btn-outline-teal{
       --bs-btn-color: var(--teal);
       --bs-btn-border-color: var(--teal);
       --bs-btn-hover-bg: var(--teal);
       --bs-btn-hover-border-color: var(--teal);
-      --bs-btn-hover-color: #fff;
+      --bs-btn-hover-color:#fff;
       --bs-btn-active-bg: var(--teal-700);
       --bs-btn-active-border-color: var(--teal-700);
     }
-
-    .alert {
-      border-radius: 10px;
-    }
-
-    @media (max-width: 992px) {
-      .login-card { flex-direction: column; }
-      .login-left, .login-right { width: 100%; }
-      .login-left { padding: 34px 28px; }
+    .alert{ border-radius:10px }
+    @media (max-width:992px){
+      .login-card{ flex-direction:column; }
+      .login-left, .login-right{ width:100% }
+      .login-left{ padding:34px 28px }
     }
   </style>
 </head>
@@ -136,14 +80,14 @@ if (function_exists('is_logged_in') ? is_logged_in() : is_logged()) {
 
       <?php if (!empty($_GET['err'])): ?>
         <div class="alert alert-danger">Usuario o contraseña inválidos.</div>
-      <?php elseif (!empty($_GET['msg']) && $_GET['msg'] === 'login'): ?>
+      <?php elseif (!empty($_GET['msg']) && $_GET['msg']==='login'): ?>
         <div class="alert alert-success">Por favor, inicia sesión para continuar.</div>
-      <?php elseif (!empty($_GET['msg']) && $_GET['msg'] === 'logout'): ?>
+      <?php elseif (!empty($_GET['msg']) && $_GET['msg']==='logout'): ?>
         <div class="alert alert-info">Sesión cerrada correctamente. Puedes iniciar nuevamente.</div>
       <?php endif; ?>
 
-      <form action="login.php" method="POST" novalidate autocomplete="off">
-        <?php if (function_exists('csrf_field')) { csrf_field(); } ?>
+      <form action="login.php" method="POST" novalidate>
+        <?php csrf_field(); ?>
         <div class="mb-3">
           <input type="text" class="form-control" placeholder="Usuario" name="username" required autocomplete="username">
         </div>
