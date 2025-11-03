@@ -1,23 +1,16 @@
 <?php
 require_once __DIR__ . '/includes/conexion.php';
 
-echo "<h3>🛠 Creando usuario admin...</h3>";
+$username = 'admin';
+$password = '1234';
+$role = 'admin';
 
-try {
-    $conn->exec("DELETE FROM usuarios WHERE username = 'admin'");
+// Genera un nuevo hash de la contraseña
+$hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $passwordPlano = '12345';
-    $hash = password_hash($passwordPlano, PASSWORD_BCRYPT);
+// Reemplaza o inserta el usuario admin con el nuevo hash
+$stmt = $conexion->prepare("REPLACE INTO usuarios (id, username, password, role) VALUES (1, ?, ?, ?)");
+$stmt->execute([$username, $hash, $role]);
 
-    $stmt = $conn->prepare("INSERT INTO usuarios (username, password, role) VALUES (?, ?, ?)");
-    $stmt->execute(['admin', $hash, 'admin']);
-
-    echo "<p style='color:green'>✅ Usuario <b>admin</b> creado correctamente.</p>";
-    echo "<pre>Usuario: admin\nContraseña: 12345</pre>";
-    echo "<p>Hash almacenado:</p>";
-    echo "<code>$hash</code>";
-
-} catch (PDOException $e) {
-    echo "<p style='color:red'>❌ Error al crear usuario: " . $e->getMessage() . "</p>";
-}
+echo "✅ Usuario admin regenerado correctamente con contraseña 1234.";
 ?>
