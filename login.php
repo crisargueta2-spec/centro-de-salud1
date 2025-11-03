@@ -22,11 +22,12 @@ if (empty($username) || empty($password)) {
 }
 
 try {
-    // Buscar usuario en la BD
+    // Buscar usuario en la base de datos (usando la conexión real $conexion)
     $stmt = $conexion->prepare("SELECT * FROM usuarios WHERE username = :u LIMIT 1");
     $stmt->execute([':u' => $username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Validar usuario y contraseña
     if ($user && password_verify($password, $user['password'])) {
         // Iniciar sesión
         $_SESSION['user'] = [
@@ -35,13 +36,13 @@ try {
             'rol'      => $user['role'] ?? $user['rol'] ?? 'usuario'
         ];
 
-        // Redirigir según rol
+        // Redirigir al dashboard según el rol
         redirect_by_role($_SESSION['user']['rol']);
     } else {
-        // Credenciales incorrectas
         header('Location: index.php?err=invalid');
         exit;
     }
+
 } catch (PDOException $e) {
     error_log("Error al iniciar sesión: " . $e->getMessage());
     header('Location: index.php?err=db');
