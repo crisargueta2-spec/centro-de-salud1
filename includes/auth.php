@@ -1,64 +1,57 @@
 <?php
 require_once __DIR__ . '/session.php';
-require_once __DIR__ . '/config.php';
 
 /**
- * Retorna el usuario logueado actual, o null si no hay sesión.
+ * Devuelve el usuario actual (o null si no hay sesión)
  */
-function user() {
+function user(): ?array {
     return $_SESSION['user'] ?? null;
 }
 
 /**
- * Verifica si el usuario está logueado.
+ * Verifica si el usuario tiene sesión activa
  */
-function is_logged() {
+function is_logged_in(): bool {
     return isset($_SESSION['user']);
 }
 
 /**
- * Requiere que haya sesión activa; si no, redirige al login.
+ * Verifica que el usuario tenga el rol especificado.
+ * Si no tiene sesión o no tiene permisos, redirige al login.
  */
-function require_login() {
-    if (!is_logged()) {
-        header('Location: ' . APP_URL . 'index.php?msg=login');
+function require_role(string|array $roles): void {
+    $user = user();
+
+    if (!$user) {
+        header('Location: /index.php?err=nologin');
+        exit;
+    }
+
+    // Aceptar tanto string como array de roles permitidos
+    $rol = strtolower($user['rol'] ?? $user['role'] ?? '');
+    if (is_array($roles)) {
+        $permitido = in_array($rol, array_map('strtolower', $roles));
+    } else {
+        $permitido = ($rol === strtolower($roles));
+    }
+
+    if (!$permitido) {
+        header('Location: /index.php?err=denied');
         exit;
     }
 }
 
 /**
- * Requiere que el usuario tenga un rol específico.
+ * Redirige al dashboard según el rol del usuario
  */
-function require_role($required_role) {
-    require_login();
-
-    $user = $_SESSION['user'] ?? null;
-    $rol = strtolower($user['rol'] ?? ($user['role'] ?? ''));
-
-    if ($rol !== strtolower($required_role)) {
-        header('Location: ' . APP_URL . 'index.php?msg=login');
-        exit;
-    }
-}
-
-/**
- * Redirige al panel correcto según el rol del usuario.
- */
-function redirect_by_role($role) {
-    switch (strtolower($role)) {
-        case 'admin':
-            header('Location: ' . APP_URL . 'roles/admin_dashboard.php');
-            break;
-        case 'medico':
-            header('Location: ' . APP_URL . 'roles/medico_dashboard.php');
-            break;
-        case 'secretaria':
-            header('Location: ' . APP_URL . 'roles/secretaria_dashboard.php');
-            break;
-        default:
-            header('Location: ' . APP_URL . 'index.php?msg=login');
-            break;
-    }
+function redirect_by_role(string $rol): void {
+    $rol = strtolower($rol);
+    $map = [
+        'admin'      => '/roles/admin_dashboard.php',
+        'secretaria' => '/roles/secretaria_dashboard.php',
+        'medico'     => '/roles/medico_dashboard.php'
+    ];
+    header('Location: ' . ($map[$rol] ?? '/index.php'));
     exit;
 }
-?>
+
