@@ -10,7 +10,7 @@ if (!$id) {
     exit;
 }
 
-$stmt = $conn->prepare("DELETE FROM asignaciones WHERE id = ?");
+$stmt = $conexion->prepare("DELETE FROM asignaciones WHERE id=?");
 $stmt->execute([$id]);
 
 header("Location: listar.php?ok=3");
