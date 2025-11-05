@@ -6,35 +6,44 @@ require_once __DIR__.'/../includes/csrf.php';
 require_once __DIR__.'/../includes/config.php';
 
 $id = (int)($_GET['id'] ?? 0);
-$stmt = $conn->prepare("SELECT * FROM pacientes WHERE id=?");
+$stmt = $conexion->prepare("SELECT * FROM pacientes WHERE id=?");
 $stmt->execute([$id]);
 $p = $stmt->fetch();
-if(!$p){ http_response_code(404); exit('No encontrado'); }
+if (!$p) { http_response_code(404); exit('No encontrado'); }
 
-if($_SERVER['REQUEST_METHOD']==='POST'){
-  if (!csrf_validate($_POST['csrf'] ?? '')) { http_response_code(400); exit('CSRF'); }
-  $nombre = trim($_POST['nombre'] ?? '');
-  $apellido = trim($_POST['apellido'] ?? '');
-  $fecha_nacimiento = $_POST['fecha_nacimiento'] ?? null;
-  $genero = $_POST['genero'] ?? null;
-  $medico_referente = trim($_POST['medico_referente'] ?? '');
-  $motivo = trim($_POST['motivo'] ?? '');
-  $fecha_referencia = $_POST['fecha_referencia'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+        http_response_code(400);
+        exit('CSRF');
+    }
 
-  $up = $conn->prepare("UPDATE pacientes SET nombre=?,apellido=?,fecha_nacimiento=?,genero=?,medico_referente=?,motivo=?,fecha_referencia=? WHERE id=?");
-  $up->execute([$nombre,$apellido,$fecha_nacimiento,$genero,$medico_referente,$motivo,$fecha_referencia,$id]);
-  header('Location: '. (defined('APP_URL')?APP_URL:'') .'pacientes/listar.php?ok=2'); exit;
+    $nombre            = trim($_POST['nombre'] ?? '');
+    $apellido          = trim($_POST['apellido'] ?? '');
+    $fecha_nacimiento  = $_POST['fecha_nacimiento'] ?? null;
+    $genero            = $_POST['genero'] ?? null;
+    $medico_referente  = trim($_POST['medico_referente'] ?? '');
+    $motivo            = trim($_POST['motivo'] ?? '');
+    $fecha_referencia  = $_POST['fecha_referencia'] ?? null;
+
+    $up = $conexion->prepare("UPDATE pacientes 
+        SET nombre=?, apellido=?, fecha_nacimiento=?, genero=?, medico_referente=?, motivo=?, fecha_referencia=? 
+        WHERE id=?");
+    $up->execute([$nombre, $apellido, $fecha_nacimiento, $genero, $medico_referente, $motivo, $fecha_referencia, $id]);
+
+    header('Location: listar.php?ok=2');
+    exit;
 }
 
 include __DIR__.'/../templates/header.php';
 ?>
-<style>.form-page{display:flex; justify-content:center}.form-card{max-width:800px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}.form-card-body{padding:16px}</style>
+<!-- mismo estilo que crear -->
+<style>.form-page{display:flex;justify-content:center}.form-card{max-width:800px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}.form-card-body{padding:16px}</style>
 
 <div class="form-page">
   <div class="form-card">
     <div class="form-card-head">Editar Paciente</div>
     <div class="form-card-body">
-      <form method="POST" action="pacientes/editar.php?id=<?= $p['id'] ?>" class="row g-3">
+      <form method="POST" action="" class="row g-3">
         <?php csrf_field(); ?>
         <div class="col-md-6">
           <label class="form-label">Nombre</label>
@@ -69,7 +78,7 @@ include __DIR__.'/../templates/header.php';
           <textarea name="motivo" class="form-control" rows="3"><?= htmlspecialchars($p['motivo']) ?></textarea>
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <a href="pacientes/listar.php" class="btn btn-secondary">Cancelar</a>
+          <a href="listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary" type="submit">Actualizar</button>
         </div>
       </form>
