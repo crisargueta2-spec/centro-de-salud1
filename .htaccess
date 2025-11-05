@@ -1,14 +1,11 @@
 Options +FollowSymLinks
 RewriteEngine On
 
-# Mantener la estructura REAL de las carpetas
-RewriteBase /
-
-# ✅ Permitir PHP normales
+# ✅ Permitir archivos PHP normalmente
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# ✅ Permitir acceso a carpetas
+# ✅ Permitir carpetas normalmente
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
@@ -16,4 +13,5 @@ RewriteRule ^ - [L]
 RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|pdf|txt)$ [NC]
 RewriteRule ^ - [L]
 
-# ❌ QUITAMOS EL REDIRECT A index.php (esto es lo que rompía todo)
+# ❌ ELIMINADO: la regla que rompía todo
+# RewriteRule ^ index.php [L,QSA]
