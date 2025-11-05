@@ -1,129 +1,109 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-require_role(['admin','secretaria']);
-require_once __DIR__ . '/../includes/conexion.php';
+require_role(['admin', 'secretaria', 'medico']);
 include __DIR__ . '/../templates/header.php';
-
-$q      = trim($_GET['q'] ?? '');
-$scope  = $_GET['scope'] ?? 'today';
-$day    = $_GET['day']   ?? date('Y-m-d');
-$month  = $_GET['month'] ?? date('Y-m');
-
-$whereParts = [];
-$params = [];
-
-// Búsqueda
-if ($q !== '') {
-  $like = '%'.str_replace(' ','%',$q).'%';
-  $parts = [
-    "(p.nombre LIKE ? OR p.apellido LIKE ? OR CONCAT(p.nombre,' ',p.apellido) LIKE ?)",
-    "(p.genero LIKE ?)",
-    "(p.motivo LIKE ?)"
-  ];
-
-  // Si el texto parece una fecha válida (YYYY-MM-DD), solo entonces filtra por fecha
-  if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $q)) {
-    $parts[] = "(DATE(p.fecha_referencia)=? OR DATE(p.fecha_nacimiento)=?)";
-    $params[] = $q;
-    $params[] = $q;
-  }
-
-  $params = array_merge([$like,$like,$like,$like,$like], $params);
-
-  // Si el texto es numérico pequeño, buscar por edad
-  if (ctype_digit($q) && (int)$q <= 120) {
-    $parts[] = "TIMESTAMPDIFF(YEAR,p.fecha_nacimiento,CURDATE()) = ?";
-    $params[] = (int)$q;
-  }
-
-  $whereParts[] = '(' . implode(' OR ', $parts) . ')';
-}
-
-// Filtro de fecha
-switch ($scope) {
-  case 'day':
-    $whereParts[] = "DATE(p.fecha_referencia) = ?";
-    $params[] = preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) ? $day : date('Y-m-d');
-    break;
-  case 'month':
-    $first = preg_match('/^\d{4}-\d{2}$/', $month) ? ($month.'-01') : (date('Y-m').'-01');
-    $whereParts[] = "DATE(p.fecha_referencia) BETWEEN ? AND LAST_DAY(?)";
-    $params[] = $first; $params[] = $first;
-    break;
-  case 'all':
-    break;
-  default:
-    $whereParts[] = "DATE(p.fecha_referencia) = CURDATE()";
-    break;
-}
-
-$where = $whereParts ? ('WHERE '.implode(' AND ',$whereParts)) : '';
-
-$sql = "SELECT p.id,p.nombre,p.apellido,p.genero,p.fecha_nacimiento,p.fecha_referencia,p.motivo
-        FROM pacientes p
-        {$where}
-        ORDER BY p.id DESC";
-$stmt = $conn->prepare($sql);
-$stmt->execute($params);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-<div class="topbar">
-  <h2 class="mb-0">Pacientes</h2>
-  <div class="d-flex gap-2">
-    <form class="d-flex gap-2" method="get" action="pacientes/listar.php">
-      <input class="form-control" style="min-width:260px" type="search" name="q" placeholder="Buscar por nombre, motivo, edad o fecha (YYYY-MM-DD)..."
-             value="<?= htmlspecialchars($q) ?>">
 
-      <select class="form-select" name="scope" onchange="this.form.submit()">
-        <option value="today" <?= $scope==='today'?'selected':'' ?>>Hoy</option>
-        <option value="day"   <?= $scope==='day'?'selected':'' ?>>Un día</option>
-        <option value="month" <?= $scope==='month'?'selected':'' ?>>Un mes</option>
-        <option value="all"   <?= $scope==='all'?'selected':'' ?>>Todos</option>
-      </select>
-
-      <input class="form-control" type="date"  name="day"   value="<?= htmlspecialchars($day) ?>"   <?= $scope==='day'?'':'disabled' ?>>
-      <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>" <?= $scope==='month'?'':'disabled' ?>>
-
-      <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
-      <?php if($q!=='' || $scope!=='today'): ?>
-        <a class="btn btn-outline-dark" href="pacientes/listar.php">Limpiar</a>
-      <?php endif; ?>
-    </form>
-    <a class="btn btn-primary" href="pacientes/crear.php"><i class="bi bi-plus-circle"></i> Nuevo</a>
-  </div>
+<div class="page-head mb-4">
+  <h1 class="h3 mb-0">Gestión de Pacientes</h1>
+  <p class="text-muted">Consulta, filtra o administra los registros de pacientes.</p>
 </div>
 
-<div class="small-muted mb-2">Se muestran por defecto los pacientes ingresados hoy.</div>
+<!-- 🔹 Filtros de búsqueda -->
+<div class="d-flex align-items-center flex-wrap gap-2 mb-4">
+  <label class="form-label mb-0 me-2 fw-semibold">Ver por día/mes:</label>
+  <input type="date" id="fecha_dia" class="form-control w-auto" value="<?= date('Y-m-d') ?>">
+  <button class="btn btn-secondary" id="btnVerDia">Ver día</button>
 
-<div class="table-card">
-  <div class="table-responsive">
-    <table class="table table-hover table-bordered align-middle">
-      <thead class="table-primary">
-        <tr>
-          <th>Paciente</th><th>Género</th><th>Nacimiento</th><th>Ingreso</th><th>Motivo</th>
-          <th class="no-print" style="width:150px">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach($rows as $r): ?>
-          <tr>
-            <td><?= htmlspecialchars($r['nombre'].' '.$r['apellido']) ?></td>
-            <td><?= htmlspecialchars($r['genero']) ?></td>
-            <td><?= htmlspecialchars($r['fecha_nacimiento']) ?></td>
-            <td><?= htmlspecialchars($r['fecha_referencia']) ?></td>
-            <td><?= nl2br(htmlspecialchars($r['motivo'])) ?></td>
-            <td class="no-print">
-              <a class="btn btn-sm btn-outline-secondary" href="pacientes/editar.php?id=<?= $r['id'] ?>">Editar</a>
-              <a class="btn btn-sm btn-outline-danger" href="pacientes/eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar paciente?')">Eliminar</a>
-            </td>
-          </tr>
-        <?php endforeach; if(empty($rows)): ?>
-          <tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>
-        <?php endif; ?>
-      </tbody>
-    </table>
-  </div>
+  <input type="month" id="fecha_mes" class="form-control w-auto" value="<?= date('Y-m') ?>">
+  <button class="btn btn-secondary" id="btnVerMes">Ver mes</button>
+
+  <button class="btn btn-outline-dark" id="btnHoy">Hoy</button>
+  <button class="btn btn-outline-dark" id="btnTodos">Todos</button>
 </div>
 
-<?php include __DIR__.'/../templates/footer.php'; ?>
+<!-- 🔹 Tabla de pacientes -->
+<div class="table-responsive shadow-sm rounded bg-white p-3">
+  <table class="table table-hover align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>DPI</th>
+        <th>Edad</th>
+        <th>Teléfono</th>
+        <th>Fecha de Registro</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php
+      require_once __DIR__ . '/../includes/conexion.php';
+      try {
+          $query = "SELECT id, nombre, dpi, edad, telefono, fecha_registro FROM pacientes ORDER BY fecha_registro DESC";
+          $stmt = $conexion->query($query);
+          $pacientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+          if (count($pacientes) === 0) {
+              echo "<tr><td colspan='7' class='text-center text-muted py-3'>No hay pacientes registrados.</td></tr>";
+          } else {
+              foreach ($pacientes as $p) {
+                  echo "<tr>
+                          <td>{$p['id']}</td>
+                          <td>" . htmlspecialchars($p['nombre']) . "</td>
+                          <td>{$p['dpi']}</td>
+                          <td>{$p['edad']}</td>
+                          <td>{$p['telefono']}</td>
+                          <td>{$p['fecha_registro']}</td>
+                          <td>
+                            <a href='editar.php?id={$p['id']}' class='btn btn-sm btn-outline-primary'>
+                              <i class='bi bi-pencil-square'></i>
+                            </a>
+                            <a href='eliminar.php?id={$p['id']}' class='btn btn-sm btn-outline-danger' onclick='return confirm(\"¿Eliminar paciente?\")'>
+                              <i class='bi bi-trash'></i>
+                            </a>
+                          </td>
+                        </tr>";
+              }
+          }
+      } catch (PDOException $e) {
+          echo "<tr><td colspan='7' class='text-danger text-center'>Error al cargar pacientes: {$e->getMessage()}</td></tr>";
+      }
+      ?>
+    </tbody>
+  </table>
+</div>
+
+<!-- 🔹 Script para manejo de botones -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const fechaDia = document.getElementById('fecha_dia');
+  const fechaMes = document.getElementById('fecha_mes');
+  const btnVerDia = document.getElementById('btnVerDia');
+  const btnVerMes = document.getElementById('btnVerMes');
+  const btnHoy = document.getElementById('btnHoy');
+  const btnTodos = document.getElementById('btnTodos');
+
+  btnVerDia?.addEventListener('click', () => {
+    const fecha = fechaDia.value;
+    if (fecha) window.location = `listar.php?tipo=dia&fecha=${fecha}`;
+  });
+
+  btnVerMes?.addEventListener('click', () => {
+    const fecha = fechaMes.value;
+    if (fecha) window.location = `listar.php?tipo=mes&fecha=${fecha}`;
+  });
+
+  btnHoy?.addEventListener('click', () => {
+    const hoy = new Date().toISOString().split('T')[0];
+    window.location = `listar.php?tipo=dia&fecha=${hoy}`;
+  });
+
+  btnTodos?.addEventListener('click', () => {
+    window.location = 'listar.php';
+  });
+});
+</script>
+
+<?php include __DIR__ . '/../templates/footer.php'; ?>
 
