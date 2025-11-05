@@ -13,15 +13,33 @@ $whereParts = [];
 $params = [];
 
 // BUSQUEDA
+// BUSQUEDA
 if ($q !== '') {
+
     $like = "%".str_replace(" ", "%", $q)."%";
-    $whereParts[] = "(p.nombre LIKE ? OR p.apellido LIKE ?
-                      OR CONCAT(p.nombre,' ',p.apellido) LIKE ?
-                      OR e.nombre LIKE ? OR e.especialidad LIKE ?
-                      OR a.prioridad LIKE ? OR a.estado LIKE ?
-                      OR DATE(a.fecha_cita)=?)";
-    $params = array_merge($params, [$like,$like,$like,$like,$like,$like,$like,$q]);
+
+    // Partes básicas
+    $parts = [
+        "(p.nombre LIKE ?
+          OR p.apellido LIKE ?
+          OR CONCAT(p.nombre,' ',p.apellido) LIKE ?
+          OR e.nombre LIKE ?
+          OR e.especialidad LIKE ?
+          OR a.prioridad LIKE ?
+          OR a.estado LIKE ?)"
+    ];
+
+    $params = [$like, $like, $like, $like, $like, $like, $like];
+
+    // ✅ Solo comparar fechas si $q ES una fecha válida
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $q)) {
+        $parts[] = "DATE(a.fecha_cita) = ?";
+        $params[] = $q;
+    }
+
+    $whereParts[] = "(" . implode(" OR ", $parts) . ")";
 }
+
 
 // FILTRO FECHA
 switch ($scope) {
