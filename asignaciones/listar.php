@@ -12,13 +12,13 @@ $month  = $_GET['month'] ?? date('Y-m');
 $whereParts = [];
 $params = [];
 
-// Buscar
+// BUSCADOR
 if ($q !== '') {
     $like = "%".str_replace(" ", "%", $q)."%";
 
     $whereParts[] = "(p.nombre LIKE ?
                       OR p.apellido LIKE ?
-                      OR CONCAT(p.nombre,' ',p.apellido) LIKE ?
+                      OR CONCAT(p.nombre, ' ', p.apellido) LIKE ?
                       OR e.nombre LIKE ?
                       OR e.especialidad LIKE ?
                       OR a.prioridad LIKE ?
@@ -28,7 +28,7 @@ if ($q !== '') {
     $params = array_merge($params, [$like,$like,$like,$like,$like,$like,$like,$q]);
 }
 
-// Filtro fecha
+// FILTRO DE FECHA
 switch ($scope) {
     case 'day':
         $whereParts[] = "DATE(a.fecha_cita) = ?";
@@ -53,7 +53,6 @@ switch ($scope) {
 
 $where = $whereParts ? ("WHERE ".implode(" AND ", $whereParts)) : "";
 
-// ✅ USAMOS $conexion, NO $conn
 $sql = "SELECT a.id, a.fecha_cita, a.prioridad, a.estado,
                p.nombre AS nombre_paciente, p.apellido AS apellido_paciente,
                e.nombre AS nombre_especialista, e.especialidad
@@ -70,12 +69,13 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <div class="topbar">
   <h2 class="mb-0">Asignaciones</h2>
-  <div class="d-flex gap-2">
-    <form class="d-flex gap-2" method="get" action="listar.php">
 
+  <div class="d-flex gap-2">
+
+    <form class="d-flex gap-2" method="get" action="listar.php">
       <input class="form-control" style="min-width:260px" type="search"
-             name="q" placeholder="Buscar por paciente, especialista, prioridad..."
-             value="<?= htmlspecialchars($q) ?>">
+        name="q" placeholder="Buscar por paciente, especialista..."
+        value="<?= htmlspecialchars($q) ?>">
 
       <select class="form-select" name="scope" onchange="this.form.submit()">
         <option value="today" <?= $scope==='today'?'selected':'' ?>>Hoy</option>
@@ -85,17 +85,16 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </select>
 
       <input class="form-control" type="date" name="day"
-             value="<?= htmlspecialchars($day) ?>" <?= $scope==='day'?'':'disabled' ?>>
+        value="<?= htmlspecialchars($day) ?>" <?= $scope==='day'?'':'disabled' ?>>
 
       <input class="form-control" type="month" name="month"
-             value="<?= htmlspecialchars($month) ?>" <?= $scope==='month'?'':'disabled' ?>>
+        value="<?= htmlspecialchars($month) ?>" <?= $scope==='month'?'':'disabled' ?>>
 
       <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
 
       <?php if ($q !== '' || $scope !== 'today'): ?>
         <a class="btn btn-outline-dark" href="listar.php">Limpiar</a>
       <?php endif; ?>
-
     </form>
 
     <a class="btn btn-primary" href="crear.php">
@@ -104,12 +103,11 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </div>
 </div>
 
-<div class="small-muted mb-2">
-  Se muestran las citas <strong>de hoy</strong> por defecto.
-</div>
+<div class="small-muted mb-2">Se muestran las citas de <strong>hoy</strong>.</div>
 
 <div class="table-card">
   <div class="table-responsive">
+
     <table class="table table-hover table-bordered align-middle">
       <thead class="table-primary">
         <tr>
@@ -118,15 +116,15 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <th>Prioridad</th>
           <th>Fecha</th>
           <th>Estado</th>
-          <th class="no-print" style="width:260px">Acciones</th>
+          <th class="no-print" style="width:240px">Acciones</th>
         </tr>
       </thead>
-      <tbody>
 
-        <?php foreach($rows as $r): ?>
+      <tbody>
+      <?php foreach($rows as $r): ?>
         <tr>
-          <td><?= htmlspecialchars($r['nombre_paciente']." ".$r['apellido_paciente']) ?></td>
-          <td><?= htmlspecialchars($r['nombre_especialista']." — ".$r['especialidad']) ?></td>
+          <td><?= htmlspecialchars($r['nombre_paciente'].' '.$r['apellido_paciente']) ?></td>
+          <td><?= htmlspecialchars($r['nombre_especialista'].' — '.$r['especialidad']) ?></td>
           <td><?= htmlspecialchars($r['prioridad']) ?></td>
           <td><?= htmlspecialchars($r['fecha_cita']) ?></td>
           <td><?= htmlspecialchars($r['estado']) ?></td>
@@ -140,18 +138,17 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
                onclick="return confirm('¿Eliminar asignación?')">Eliminar</a>
           </td>
         </tr>
-        <?php endforeach; ?>
+      <?php endforeach; ?>
 
-        <?php if(empty($rows)): ?>
+      <?php if (empty($rows)): ?>
         <tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>
-        <?php endif; ?>
-
+      <?php endif; ?>
       </tbody>
     </table>
+
   </div>
 
   <form class="d-flex gap-2 mt-3 no-print" method="get" action="listar.php">
-
     <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
 
     <label class="form-label m-0">Ver por día/mes:</label>
@@ -169,6 +166,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <a class="btn btn-outline-dark ms-auto" href="listar.php">Hoy</a>
     <a class="btn btn-outline-dark" href="listar.php?scope=all">Todos</a>
   </form>
+
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
