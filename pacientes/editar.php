@@ -60,10 +60,10 @@ include __DIR__.'/../templates/header.php';
         <div class="col-md-4">
           <label class="form-label">Género</label>
           <select name="genero" class="form-select">
-            <?php foreach (['','Masculino','Femenino','Otro'] as $g): ?>
-              <option value="<?= $g ?>" <?= ($p['genero']===$g)?'selected':'' ?>><?= $g?:'—' ?></option>
-            <?php endforeach; ?>
-          </select>
+  <option value="">—</option>
+  <option value="M" <?= ($p['genero'] ?? '') === 'M' ? 'selected' : '' ?>>Masculino</option>
+  <option value="F" <?= ($p['genero'] ?? '') === 'F' ? 'selected' : '' ?>>Femenino</option>
+</select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Fecha referencia</label>
