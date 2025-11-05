@@ -114,7 +114,7 @@ include __DIR__.'/../templates/header.php';
         </div>
 
         <div class="col-12 text-end">
-          <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+          <a href="/asignaciones/listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary">Actualizar</button>
         </div>
 
