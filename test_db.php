@@ -1,22 +1,16 @@
 <?php
 require_once __DIR__ . '/includes/conexion.php';
 
-echo "<h2>🔍 Prueba de conexión a la base de datos</h2>";
-
 try {
-    if (!isset($conn)) {
-        throw new Exception("❌ Variable \$conn no inicializada.");
-    }
+    $stmt = $conexion->query("SHOW TABLES");
+    $tablas = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    $stmt = $conn->query("SELECT NOW() AS fecha_actual");
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    echo "<p><b>✅ Conexión exitosa.</b></p>";
-    echo "<p>Servidor respondió con la fecha/hora actual:</p>";
-    echo "<pre>" . htmlspecialchars($row['fecha_actual']) . "</pre>";
-
-} catch (Throwable $e) {
-    echo "<p><b>❌ Error de conexión:</b></p>";
-    echo "<pre>" . htmlspecialchars($e->getMessage()) . "</pre>";
+    echo "✅ Conexión establecida correctamente.<br><br>";
+    echo "📋 Tablas en la base de datos:<br>";
+    echo "<pre>";
+    print_r($tablas);
+    echo "</pre>";
+} catch (PDOException $e) {
+    echo "❌ Error de conexión o consulta: " . $e->getMessage();
 }
 ?>
