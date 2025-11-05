@@ -78,7 +78,7 @@ include __DIR__.'/../templates/header.php';
           <textarea name="motivo" class="form-control" rows="3"><?= htmlspecialchars($p['motivo']) ?></textarea>
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+         <a href="../pacientes/listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary" type="submit">Actualizar</button>
         </div>
       </form>
