@@ -59,11 +59,10 @@ box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
         <div class="col-md-4">
           <label class="form-label">Género</label>
           <select name="genero" class="form-select">
-            <option value="">—</option>
-            <option>Masculino</option>
-            <option>Femenino</option>
-            <option>Otro</option>
-          </select>
+  <option value="">—</option>
+  <option value="M">Masculino</option>
+  <option value="F">Femenino</option>
+</select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Fecha referencia</label>
