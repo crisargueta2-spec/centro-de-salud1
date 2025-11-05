@@ -25,17 +25,17 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         exit("CSRF");
     }
 
-    $paciente_id     = (int)($_POST['paciente_id']);
-    $especialista_id = (int)($_POST['especialista_id']);
+    $paciente_id     = (int)$_POST['paciente_id'];
+    $especialista_id = (int)$_POST['especialista_id'];
     $fecha_cita      = $_POST['fecha_cita'];
     $prioridad       = $_POST['prioridad'] ?: null;
     $estado          = $_POST['estado'];
 
-    $up = $conexion->prepare("UPDATE asignaciones
-                              SET paciente_id=?, especialista_id=?, fecha_cita=?,
-                                  prioridad=?, estado=?
-                              WHERE id=?");
-
+    $up = $conexion->prepare("
+        UPDATE asignaciones
+        SET paciente_id=?, especialista_id=?, fecha_cita=?, prioridad=?, estado=?
+        WHERE id=?
+    ");
     $up->execute([$paciente_id,$especialista_id,$fecha_cita,$prioridad,$estado,$id]);
 
     header("Location: listar.php?ok=2");
@@ -44,10 +44,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 
 include __DIR__.'/../templates/header.php';
 ?>
+
 <style>
 .form-page{display:flex;justify-content:center}
 .form-card{max-width:700px;background:white;border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,.1)}
+           box-shadow:0 2px 8px rgba(0,0,0,.1)}
 .form-card-head{background:#0d6efd;color:white;padding:12px;font-weight:700}
 .form-card-body{padding:16px}
 </style>
@@ -60,6 +61,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.1)}
     <div class="form-card-body">
 
       <form method="POST" class="row g-3">
+
         <?php csrf_field(); ?>
 
         <div class="col-12">
@@ -67,7 +69,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.1)}
           <select name="paciente_id" class="form-select" required>
             <?php foreach($pacientes as $p): ?>
             <option value="<?= $p['id'] ?>" <?= $p['id']==$a['paciente_id']?'selected':'' ?>>
-              <?= htmlspecialchars($p['nombre']." ".$p['apellido']) ?>
+              <?= htmlspecialchars($p['nombre'].' '.$p['apellido']) ?>
             </option>
             <?php endforeach; ?>
           </select>
@@ -78,19 +80,21 @@ box-shadow:0 2px 8px rgba(0,0,0,.1)}
           <select name="especialista_id" class="form-select" required>
             <?php foreach($especialistas as $e): ?>
             <option value="<?= $e['id'] ?>" <?= $e['id']==$a['especialista_id']?'selected':'' ?>>
-              <?= htmlspecialchars($e['nombre']." — ".$e['especialidad']) ?>
+              <?= htmlspecialchars($e['nombre'].' — '.$e['especialidad']) ?>
             </option>
             <?php endforeach; ?>
           </select>
         </div>
 
-        <div class="col-6">
+        <div class="col-md-6">
           <label class="form-label">Fecha cita</label>
-          <input type="date" name="fecha_cita" class="form-control"
-                 value="<?= htmlspecialchars($a['fecha_cita']) ?>" required>
+          <input type="date"
+            name="fecha_cita"
+            value="<?= htmlspecialchars($a['fecha_cita']) ?>"
+            class="form-control" required>
         </div>
 
-        <div class="col-6">
+        <div class="col-md-6">
           <label class="form-label">Prioridad</label>
           <select name="prioridad" class="form-select">
             <option value="">—</option>
@@ -100,7 +104,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.1)}
           </select>
         </div>
 
-        <div class="col-6">
+        <div class="col-md-6">
           <label class="form-label">Estado</label>
           <select name="estado" class="form-select">
             <option value="pendiente" <?= $a['estado']==='pendiente'?'selected':'' ?>>Pendiente</option>
