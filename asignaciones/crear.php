@@ -3,7 +3,6 @@ require_once __DIR__.'/../includes/auth.php';
 require_role(['admin','secretaria','medico']);
 require_once __DIR__.'/../includes/conexion.php';
 require_once __DIR__.'/../includes/csrf.php';
-require_once __DIR__.'/../includes/config.php';
 
 $pacientes = $conexion->query("SELECT id,nombre,apellido FROM pacientes ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
 $especialistas = $conexion->query("SELECT id,nombre,especialidad FROM especialistas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
@@ -15,15 +14,16 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         exit("CSRF");
     }
 
-    $paciente_id = (int)($_POST['paciente_id']);
-    $especialista_id = (int)($_POST['especialista_id']);
-    $fecha_cita = $_POST['fecha_cita'];
-    $prioridad = $_POST['prioridad'] ?: null;
+    $paciente_id     = (int)$_POST['paciente_id'];
+    $especialista_id = (int)$_POST['especialista_id'];
+    $fecha_cita      = $_POST['fecha_cita'];
+    $prioridad       = $_POST['prioridad'] ?: null;
 
-    $stmt = $conexion->prepare("INSERT INTO asignaciones
-        (paciente_id, especialista_id, fecha_cita, prioridad, estado)
-        VALUES (?, ?, ?, ?, 'pendiente')");
-    $stmt->execute([$paciente_id, $especialista_id, $fecha_cita, $prioridad]);
+    $stmt = $conexion->prepare("
+        INSERT INTO asignaciones (paciente_id,especialista_id,fecha_cita,prioridad,estado)
+        VALUES (?,?,?,?, 'pendiente')
+    ");
+    $stmt->execute([$paciente_id,$especialista_id,$fecha_cita,$prioridad]);
 
     header("Location: listar.php?ok=1");
     exit;
@@ -42,9 +42,10 @@ include __DIR__.'/../templates/header.php';
 <div class="form-page">
   <div class="form-card">
     <div class="form-card-head">Nueva Asignación</div>
-    <div class="form-card-body">
 
+    <div class="form-card-body">
       <form method="POST" class="row g-3">
+
         <?php csrf_field(); ?>
 
         <div class="col-12">
@@ -53,7 +54,7 @@ include __DIR__.'/../templates/header.php';
             <option value="">—</option>
             <?php foreach($pacientes as $p): ?>
             <option value="<?= $p['id'] ?>">
-              <?= htmlspecialchars($p['nombre']." ".$p['apellido']) ?>
+              <?= htmlspecialchars($p['nombre'].' '.$p['apellido']) ?>
             </option>
             <?php endforeach; ?>
           </select>
@@ -65,7 +66,7 @@ include __DIR__.'/../templates/header.php';
             <option value="">—</option>
             <?php foreach($especialistas as $e): ?>
             <option value="<?= $e['id'] ?>">
-              <?= htmlspecialchars($e['nombre']." — ".$e['especialidad']) ?>
+              <?= htmlspecialchars($e['nombre'].' — '.$e['especialidad']) ?>
             </option>
             <?php endforeach; ?>
           </select>
@@ -92,8 +93,8 @@ include __DIR__.'/../templates/header.php';
         </div>
 
       </form>
-
     </div>
+
   </div>
 </div>
 
