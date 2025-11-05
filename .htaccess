@@ -1,5 +1,12 @@
-# Habilitar reescritura de URLs
+# ✅ Forzar HTTPS en todo el dominio
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ✅ Habilitar reescritura de URLs
 Options +FollowSymLinks
+
+# (Ya está activado arriba, pero lo dejamos para compatibilidad)
 RewriteEngine On
 
 # Establecer base de reescritura (raíz del proyecto)
@@ -8,12 +15,12 @@ RewriteBase /
 # Archivo principal
 DirectoryIndex index.php
 
-# 🔒 Permitir acceso directo a archivos estáticos (CSS, JS, imágenes, fuentes, etc.)
+# ✅ Permitir acceso directo a archivos estáticos
 RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|pdf|txt)$ [NC]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# 🔁 Redirigir todas las demás peticiones dinámicas a index.php
+# ✅ Redirigir peticiones dinámicas a index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [L,QSA]
