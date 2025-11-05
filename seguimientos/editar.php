@@ -14,26 +14,46 @@ if(!$s){ http_response_code(404); exit('No encontrado'); }
 $pacientes = $conn->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre,apellido")->fetchAll(PDO::FETCH_ASSOC);
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
-  if (!csrf_validate($_POST['csrf'] ?? '')) { http_response_code(400); exit('CSRF'); }
+
+  // ✅ VALIDACIÓN CORRECTA
+  if (!csrf_verify($_POST['csrf_token'] ?? '')) { 
+      http_response_code(400); 
+      exit('CSRF'); 
+  }
+
   $paciente_id = (int)($_POST['paciente_id'] ?? 0);
   $resultado = trim($_POST['resultado'] ?? '');
   $proxima_cita = $_POST['proxima_cita'] ?? null;
 
-  $up = $conn->prepare("UPDATE seguimientos SET paciente_id=?, resultado=?, proxima_cita=? WHERE id=?");
+  $up = $conn->prepare("UPDATE seguimientos 
+                        SET paciente_id=?, resultado=?, proxima_cita=? 
+                        WHERE id=?");
   $up->execute([$paciente_id,$resultado,$proxima_cita,$id]);
-  header('Location: '. (defined('APP_URL')?APP_URL:'') .'seguimientos/listar.php?ok=2'); exit;
+
+  header('Location: /seguimientos/listar.php?ok=2');
+  exit;
 }
 
 include __DIR__.'/../templates/header.php';
 ?>
-<style>.form-page{display:flex; justify-content:center}.form-card{max-width:700px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}.form-card-body{padding:16px}</style>
+<style>
+.form-page{display:flex; justify-content:center}
+.form-card{max-width:700px;width:100%;background:#fff;border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
+.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}
+.form-card-body{padding:16px}
+</style>
 
 <div class="form-page">
   <div class="form-card">
     <div class="form-card-head">Editar Seguimiento</div>
     <div class="form-card-body">
-      <form method="POST" action="seguimientos/editar.php?id=<?= $s['id'] ?>" class="row g-3">
+
+      <!-- ✅ RUTA CORRECTA -->
+      <form method="POST" action="/seguimientos/editar.php?id=<?= $s['id'] ?>" class="row g-3">
+
         <?php csrf_field(); ?>
+
         <div class="col-12">
           <label class="form-label">Paciente</label>
           <select name="paciente_id" class="form-select" required>
@@ -44,21 +64,27 @@ include __DIR__.'/../templates/header.php';
             <?php endforeach; ?>
           </select>
         </div>
+
         <div class="col-12">
           <label class="form-label">Resultado</label>
           <textarea name="resultado" class="form-control" rows="4" required><?= htmlspecialchars($s['resultado']) ?></textarea>
         </div>
+
         <div class="col-md-6">
           <label class="form-label">Próxima cita</label>
           <input type="date" name="proxima_cita" class="form-control" value="<?= htmlspecialchars($s['proxima_cita']) ?>">
         </div>
+
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <a href="seguimientos/listar.php" class="btn btn-secondary">Cancelar</a>
+          <a href="/seguimientos/listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary" type="submit">Actualizar</button>
         </div>
+
       </form>
+
     </div>
   </div>
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
+
