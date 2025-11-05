@@ -77,7 +77,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
           <textarea name="motivo" class="form-control" rows="3"></textarea>
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+          <a href="../pacientes/listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary" type="submit">Guardar</button>
         </div>
       </form>
