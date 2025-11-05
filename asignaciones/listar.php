@@ -29,7 +29,7 @@ if ($q !== '') {
         "a.estado LIKE ?"
     ];
 
-    // Si el usuario busca fecha exacta
+    // fecha exacta
     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $q)) {
         $parts[] = "DATE(a.fecha_cita) = ?";
         $params = array_merge($params, [$like,$like,$like,$like,$like,$like,$like,$q]);
@@ -37,7 +37,7 @@ if ($q !== '') {
         $params = array_merge($params, [$like,$like,$like,$like,$like,$like,$like]);
     }
 
-    // Si el input es numérico → buscar por ID
+    // buscar por ID
     if (ctype_digit($q)) {
         $parts[] = "a.id = ?";
         $params[] = (int)$q;
@@ -50,6 +50,7 @@ if ($q !== '') {
     📅 FILTRO DE FECHAS
 ================================ */
 switch ($scope) {
+
     case 'day':
         $whereParts[] = "DATE(a.fecha_cita) = ?";
         $params[] = $day;
@@ -65,7 +66,8 @@ switch ($scope) {
     case 'all':
         break;
 
-    default: // today
+    default:
+        // hoy
         $whereParts[] = "DATE(a.fecha_cita) = CURDATE()";
         break;
 }
@@ -73,7 +75,7 @@ switch ($scope) {
 $where = $whereParts ? ('WHERE ' . implode(' AND ', $whereParts)) : '';
 
 /* =============================
-    ✅  CONSULTA FINAL
+    ✅ CONSULTA FINAL
 ================================ */
 $sql = "SELECT 
             a.id, a.fecha_cita, a.prioridad, a.estado,
@@ -94,10 +96,11 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <h2 class="mb-0">Asignaciones</h2>
   <div class="d-flex gap-2">
 
-    <!-- 🔎 Barra de búsqueda -->
-    <form class="d-flex gap-2" method="get">
-      <input class="form-control" style="min-width:260px" 
-             type="search" name="q" placeholder="Buscar por paciente, especialista, prioridad, fecha..."
+    <!-- 🔎 Buscador -->
+    <form class="d-flex gap-2" method="get" action="listar.php">
+      <input class="form-control" style="min-width:260px"
+             type="search" name="q"
+             placeholder="Buscar por paciente, especialista, prioridad, fecha..."
              value="<?= htmlspecialchars($q) ?>">
 
       <select class="form-select" name="scope" onchange="this.form.submit()">
@@ -107,12 +110,10 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <option value="all"   <?= $scope==='all'?'selected':'' ?>>Todos</option>
       </select>
 
-      <input class="form-control" type="date" name="day" value="<?= $day ?>" <?= $scope==='day'?'':'disabled' ?>>
+      <input class="form-control" type="date"  name="day" value="<?= $day ?>" <?= $scope==='day'?'':'disabled' ?>>
       <input class="form-control" type="month" name="month" value="<?= $month ?>" <?= $scope==='month'?'':'disabled' ?>>
 
-      <button class="btn btn-outline-secondary" type="submit">
-        <i class="bi bi-search"></i>
-      </button>
+      <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
 
       <?php if ($q !== '' || $scope !== 'today'): ?>
         <a class="btn btn-outline-dark" href="listar.php">Limpiar</a>
@@ -126,10 +127,13 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </div>
 </div>
 
-<div class="small-muted mb-2">Por defecto se muestran las <b>citas de hoy</b>.</div>
+<div class="small-muted mb-2">
+  Se muestran por defecto las <b>citas de hoy</b>.
+</div>
 
 <div class="table-card">
   <div class="table-responsive">
+
     <table class="table table-hover table-bordered align-middle">
       <thead class="table-primary">
         <tr>
@@ -146,33 +150,43 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <?php if (!empty($rows)): ?>
 <?php foreach ($rows as $r): ?>
+
         <tr>
           <td><?= htmlspecialchars($r['nombre_paciente'].' '.$r['apellido_paciente']) ?></td>
           <td><?= htmlspecialchars($r['nombre_especialista'].' — '.$r['especialidad']) ?></td>
           <td><?= htmlspecialchars($r['prioridad']) ?></td>
           <td><?= htmlspecialchars($r['fecha_cita']) ?></td>
-          <td><?= htmlspecialchars($r['estado'] ?? 'pendiente') ?></td>
+          <td><?= htmlspecialchars($r['estado']) ?></td>
+
           <td class="no-print">
             <a class="btn btn-sm btn-outline-secondary" href="editar.php?id=<?= $r['id'] ?>">Editar</a>
-            <a class="btn btn-sm btn-outline-danger" href="eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar asignación?')">Eliminar</a>
+            <a class="btn btn-sm btn-outline-danger"
+               href="eliminar.php?id=<?= $r['id'] ?>"
+               onclick="return confirm('¿Eliminar asignación?')">
+               Eliminar
+            </a>
             <a class="btn btn-sm btn-outline-primary" href="constancia.php?id=<?= $r['id'] ?>">
               <i class="bi bi-printer"></i> Comprobante
             </a>
           </td>
         </tr>
+
 <?php endforeach; ?>
 <?php else: ?>
+
         <tr>
           <td colspan="6" class="text-center text-muted">Sin resultados</td>
         </tr>
+
 <?php endif; ?>
 
       </tbody>
     </table>
+
   </div>
 
   <!-- Filtros rápidos -->
-  <form class="d-flex gap-2 mt-3 no-print" method="get">
+  <form class="d-flex gap-2 mt-3 no-print" method="get" action="listar.php">
     <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
 
     <input class="form-control" type="date" name="day" value="<?= $day ?>">
@@ -188,6 +202,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <a class="btn btn-outline-dark ms-auto" href="listar.php">Hoy</a>
     <a class="btn btn-outline-dark" href="listar.php?scope=all">Todos</a>
   </form>
+
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
