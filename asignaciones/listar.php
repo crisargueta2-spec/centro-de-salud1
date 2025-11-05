@@ -12,23 +12,18 @@ $month  = $_GET['month'] ?? date('Y-m');
 $whereParts = [];
 $params = [];
 
-// BUSCADOR
+// BUSQUEDA
 if ($q !== '') {
     $like = "%".str_replace(" ", "%", $q)."%";
-
-    $whereParts[] = "(p.nombre LIKE ?
-                      OR p.apellido LIKE ?
-                      OR CONCAT(p.nombre, ' ', p.apellido) LIKE ?
-                      OR e.nombre LIKE ?
-                      OR e.especialidad LIKE ?
-                      OR a.prioridad LIKE ?
-                      OR a.estado LIKE ?
+    $whereParts[] = "(p.nombre LIKE ? OR p.apellido LIKE ?
+                      OR CONCAT(p.nombre,' ',p.apellido) LIKE ?
+                      OR e.nombre LIKE ? OR e.especialidad LIKE ?
+                      OR a.prioridad LIKE ? OR a.estado LIKE ?
                       OR DATE(a.fecha_cita)=?)";
-
     $params = array_merge($params, [$like,$like,$like,$like,$like,$like,$like,$q]);
 }
 
-// FILTRO DE FECHA
+// FILTRO FECHA
 switch ($scope) {
     case 'day':
         $whereParts[] = "DATE(a.fecha_cita) = ?";
@@ -47,7 +42,7 @@ switch ($scope) {
 
     default:
     case 'today':
-        $whereParts[] = "DATE(a.fecha_cita) = CURDATE()";
+        $whereParts[] = "DATE(a.fecha_cita)=CURDATE()";
         break;
 }
 
@@ -57,8 +52,8 @@ $sql = "SELECT a.id, a.fecha_cita, a.prioridad, a.estado,
                p.nombre AS nombre_paciente, p.apellido AS apellido_paciente,
                e.nombre AS nombre_especialista, e.especialidad
         FROM asignaciones a
-        JOIN pacientes p ON p.id = a.paciente_id
-        JOIN especialistas e ON e.id = a.especialista_id
+        JOIN pacientes p ON p.id=a.paciente_id
+        JOIN especialistas e ON e.id=a.especialista_id
         $where
         ORDER BY a.fecha_cita DESC, a.id DESC";
 
@@ -71,8 +66,8 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   <div class="d-flex gap-2">
 
-    <!-- ✅ FORM ACTION CORREGIDO -->
-    <form class="d-flex gap-2" method="get" action="listar.php">
+    <!-- ✅ BUSCADOR CORREGIDO -->
+    <form class="d-flex gap-2" method="get" action="/asignaciones/listar.php">
 
       <input class="form-control" style="min-width:260px" type="search"
         name="q" placeholder="Buscar por paciente, especialista..."
@@ -94,14 +89,15 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
 
       <?php if ($q !== '' || $scope !== 'today'): ?>
-        <a class="btn btn-outline-dark" href="listar.php">Limpiar</a>
+        <a class="btn btn-outline-dark" href="/asignaciones/listar.php">Limpiar</a>
       <?php endif; ?>
     </form>
 
-    <!-- ✅ ENLACE CORRECTO -->
-    <a class="btn btn-primary" href="crear.php">
+    <!-- ✅ BOTÓN NUEVO -->
+    <a class="btn btn-primary" href="/asignaciones/crear.php">
       <i class="bi bi-plus-circle"></i> Nueva
     </a>
+
   </div>
 </div>
 
@@ -116,7 +112,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <th>Paciente</th>
           <th>Especialista</th>
           <th>Prioridad</th>
-          <th>Fecha</th>
+          <th>Fecha cita</th>
           <th>Estado</th>
           <th class="no-print" style="width:240px">Acciones</th>
         </tr>
@@ -132,11 +128,13 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <td><?= htmlspecialchars($r['estado']) ?></td>
 
           <td class="no-print">
+            <!-- ✅ BOTÓN EDITAR -->
             <a class="btn btn-sm btn-outline-secondary"
-               href="editar.php?id=<?= $r['id'] ?>">Editar</a>
+               href="/asignaciones/editar.php?id=<?= $r['id'] ?>">Editar</a>
 
+            <!-- ✅ BOTÓN ELIMINAR -->
             <a class="btn btn-sm btn-outline-danger"
-               href="eliminar.php?id=<?= $r['id'] ?>"
+               href="/asignaciones/eliminar.php?id=<?= $r['id'] ?>"
                onclick="return confirm('¿Eliminar asignación?')">Eliminar</a>
           </td>
         </tr>
@@ -150,7 +148,8 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   </div>
 
-  <form class="d-flex gap-2 mt-3 no-print" method="get" action="listar.php">
+  <!-- ✅ FILTROS ABAJO -->
+  <form class="d-flex gap-2 mt-3 no-print" method="get" action="/asignaciones/listar.php">
     <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
 
     <label class="form-label m-0">Ver por día/mes:</label>
@@ -165,9 +164,11 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <input type="hidden" name="scope" value="month">
     <button class="btn btn-secondary">Ver mes</button>
 
-    <!-- ✅ RUTA CORRECTA -->
-    <a class="btn btn-outline-dark ms-auto" href="listar.php">Hoy</a>
-    <a class="btn btn-outline-dark" href="listar.php?scope=all">Todos</a>
+    <!-- ✅ BOTÓN HOY -->
+    <a class="btn btn-outline-dark ms-auto" href="/asignaciones/listar.php">Hoy</a>
+
+    <!-- ✅ BOTÓN TODOS -->
+    <a class="btn btn-outline-dark" href="/asignaciones/listar.php?scope=all">Todos</a>
   </form>
 
 </div>
