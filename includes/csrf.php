@@ -1,32 +1,36 @@
 <?php
-/**
- * Protección CSRF (Cross-Site Request Forgery)
- * Compatible con login y formularios internos
- */
+// Protección CSRF universal
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 /**
- * Genera el campo oculto con token CSRF
+ * Genera token CSRF y lo guarda en sesión
  */
-function csrf_field() {
+function csrf_token() {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
-    echo '<input type="hidden" name="csrf_token" value="' . $_SESSION['csrf_token'] . '">';
+    return $_SESSION['csrf_token'];
 }
 
 /**
- * Verifica el token CSRF
+ * Imprime el campo oculto CSRF en formularios
+ */
+function csrf_field() {
+    $t = htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8');
+    echo '<input type="hidden" name="csrf_token" value="'.$t.'">';
+}
+
+/**
+ * Verifica que el token recibido sea válido
  */
 function csrf_verify($token) {
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token ?? '');
 }
 
 /**
- * Alias compatible con versiones anteriores
+ * Alias compatible (por si el código llama csrf_validate)
  */
 function csrf_validate($token) {
     return csrf_verify($token);
