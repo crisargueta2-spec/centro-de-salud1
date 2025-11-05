@@ -15,4 +15,3 @@ $stmt->execute([$id]);
 
 header("Location: listar.php?ok=3");
 exit;
-
