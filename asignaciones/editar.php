@@ -15,26 +15,27 @@ if (!$a) {
     exit("No encontrado");
 }
 
-$pacientes = $conexion->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
-$especialistas = $conexion->query("SELECT id, nombre, especialidad FROM especialistas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+$pacientes = $conexion->query("SELECT id,nombre,apellido FROM pacientes ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+$especialistas = $conexion->query("SELECT id,nombre,especialidad FROM especialistas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD']==='POST') {
 
     if (!csrf_verify($_POST['csrf_token'] ?? '')) {
         http_response_code(400);
-        exit('CSRF');
+        exit("CSRF");
     }
 
     $paciente_id     = (int)($_POST['paciente_id']);
     $especialista_id = (int)($_POST['especialista_id']);
     $fecha_cita      = $_POST['fecha_cita'];
     $prioridad       = $_POST['prioridad'] ?: null;
-    $estado          = $_POST['estado'] ?? 'pendiente';
+    $estado          = $_POST['estado'];
 
     $up = $conexion->prepare("UPDATE asignaciones
                               SET paciente_id=?, especialista_id=?, fecha_cita=?,
                                   prioridad=?, estado=?
                               WHERE id=?");
+
     $up->execute([$paciente_id,$especialista_id,$fecha_cita,$prioridad,$estado,$id]);
 
     header("Location: listar.php?ok=2");
@@ -43,12 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include __DIR__.'/../templates/header.php';
 ?>
-
 <style>
-.form-page{display:flex; justify-content:center}
-.form-card{max-width:700px;width:100%;background:white;border-radius:10px;
-           box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.form-card-head{background:#0d6efd;padding:12px;color:white;font-weight:700}
+.form-page{display:flex;justify-content:center}
+.form-card{max-width:700px;background:white;border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.form-card-head{background:#0d6efd;color:white;padding:12px;font-weight:700}
 .form-card-body{padding:16px}
 </style>
 
@@ -66,9 +66,9 @@ include __DIR__.'/../templates/header.php';
           <label class="form-label">Paciente</label>
           <select name="paciente_id" class="form-select" required>
             <?php foreach($pacientes as $p): ?>
-              <option value="<?= $p['id'] ?>" <?= $p['id']==$a['paciente_id']?'selected':'' ?>>
-                <?= htmlspecialchars($p['nombre'].' '.$p['apellido']) ?>
-              </option>
+            <option value="<?= $p['id'] ?>" <?= $p['id']==$a['paciente_id']?'selected':'' ?>>
+              <?= htmlspecialchars($p['nombre']." ".$p['apellido']) ?>
+            </option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -77,20 +77,20 @@ include __DIR__.'/../templates/header.php';
           <label class="form-label">Especialista</label>
           <select name="especialista_id" class="form-select" required>
             <?php foreach($especialistas as $e): ?>
-              <option value="<?= $e['id'] ?>" <?= $e['id']==$a['especialista_id']?'selected':'' ?>>
-                <?= htmlspecialchars($e['nombre'].' — '.$e['especialidad']) ?>
-              </option>
+            <option value="<?= $e['id'] ?>" <?= $e['id']==$a['especialista_id']?'selected':'' ?>>
+              <?= htmlspecialchars($e['nombre']." — ".$e['especialidad']) ?>
+            </option>
             <?php endforeach; ?>
           </select>
         </div>
 
-        <div class="col-md-6">
-          <label class="form-label">Fecha de cita</label>
+        <div class="col-6">
+          <label class="form-label">Fecha cita</label>
           <input type="date" name="fecha_cita" class="form-control"
                  value="<?= htmlspecialchars($a['fecha_cita']) ?>" required>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-6">
           <label class="form-label">Prioridad</label>
           <select name="prioridad" class="form-select">
             <option value="">—</option>
@@ -100,7 +100,7 @@ include __DIR__.'/../templates/header.php';
           </select>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-6">
           <label class="form-label">Estado</label>
           <select name="estado" class="form-select">
             <option value="pendiente" <?= $a['estado']==='pendiente'?'selected':'' ?>>Pendiente</option>
