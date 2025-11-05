@@ -97,7 +97,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <div class="d-flex gap-2">
 
     <!-- 🔎 Buscador -->
-    <form class="d-flex gap-2" method="get" action="listar.php">
+    <form class="d-flex gap-2" method="get" action="/asignaciones/listar.php">
       <input class="form-control" style="min-width:260px"
              type="search" name="q"
              placeholder="Buscar por paciente, especialista, prioridad, fecha..."
@@ -110,17 +110,17 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <option value="all"   <?= $scope==='all'?'selected':'' ?>>Todos</option>
       </select>
 
-      <input class="form-control" type="date"  name="day" value="<?= $day ?>" <?= $scope==='day'?'':'disabled' ?>>
-      <input class="form-control" type="month" name="month" value="<?= $month ?>" <?= $scope==='month'?'':'disabled' ?>>
+      <input class="form-control" type="date" name="day" value="<?= htmlspecialchars($day) ?>" <?= $scope==='day'?'':'disabled' ?>>
+      <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>" <?= $scope==='month'?'':'disabled' ?>>
 
       <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
 
       <?php if ($q !== '' || $scope !== 'today'): ?>
-        <a class="btn btn-outline-dark" href="listar.php">Limpiar</a>
+        <a class="btn btn-outline-dark" href="/asignaciones/listar.php">Limpiar</a>
       <?php endif; ?>
     </form>
 
-    <a class="btn btn-primary" href="crear.php">
+    <a class="btn btn-primary" href="/asignaciones/crear.php">
       <i class="bi bi-plus-circle"></i> Nueva
     </a>
 
@@ -159,14 +159,18 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <td><?= htmlspecialchars($r['estado']) ?></td>
 
           <td class="no-print">
-            <a class="btn btn-sm btn-outline-secondary" href="editar.php?id=<?= $r['id'] ?>">Editar</a>
-            <a class="btn btn-sm btn-outline-danger"
-               href="eliminar.php?id=<?= $r['id'] ?>"
+            <a class="btn btn-sm btn-outline-secondary" 
+               href="/asignaciones/editar.php?id=<?= $r['id'] ?>">Editar</a>
+
+            <a class="btn btn-sm btn-outline-danger" 
+               href="/asignaciones/eliminar.php?id=<?= $r['id'] ?>" 
                onclick="return confirm('¿Eliminar asignación?')">
                Eliminar
             </a>
-            <a class="btn btn-sm btn-outline-primary" href="constancia.php?id=<?= $r['id'] ?>">
-              <i class="bi bi-printer"></i> Comprobante
+
+            <a class="btn btn-sm btn-outline-primary"
+               href="/asignaciones/constancia.php?id=<?= $r['id'] ?>">
+               <i class="bi bi-printer"></i> Comprobante
             </a>
           </td>
         </tr>
@@ -185,22 +189,22 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   </div>
 
-  <!-- Filtros rápidos -->
-  <form class="d-flex gap-2 mt-3 no-print" method="get" action="listar.php">
+  <!-- ✅ Filtros rápidos -->
+  <form class="d-flex gap-2 mt-3 no-print" method="get" action="/asignaciones/listar.php">
     <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
 
-    <input class="form-control" type="date" name="day" value="<?= $day ?>">
+    <input class="form-control" type="date" name="day" value="<?= htmlspecialchars($day) ?>">
     <input type="hidden" name="scope" value="day">
     <button class="btn btn-secondary">Ver día</button>
 
     <div class="vr mx-2"></div>
 
-    <input class="form-control" type="month" name="month" value="<?= $month ?>">
+    <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>">
     <input type="hidden" name="scope" value="month">
     <button class="btn btn-secondary">Ver mes</button>
 
-    <a class="btn btn-outline-dark ms-auto" href="listar.php">Hoy</a>
-    <a class="btn btn-outline-dark" href="listar.php?scope=all">Todos</a>
+    <a class="btn btn-outline-dark ms-auto" href="/asignaciones/listar.php">Hoy</a>
+    <a class="btn btn-outline-dark" href="/asignaciones/listar.php?scope=all">Todos</a>
   </form>
 
 </div>
