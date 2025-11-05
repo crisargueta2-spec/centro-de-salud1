@@ -3,73 +3,76 @@ require_once __DIR__.'/../includes/auth.php';
 require_role(['admin','secretaria']);
 require_once __DIR__.'/../includes/conexion.php';
 require_once __DIR__.'/../includes/csrf.php';
-require_once __DIR__.'/../includes/config.php';
 
 $id = (int)($_GET['id'] ?? 0);
+
 $stmt = $conexion->prepare("SELECT * FROM asignaciones WHERE id=?");
 $stmt->execute([$id]);
 $a = $stmt->fetch();
-if (!$a) { http_response_code(404); exit('No encontrado'); }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (!$a) { http_response_code(404); exit("No encontrado"); }
+
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+
     if (!csrf_verify($_POST['csrf_token'] ?? '')) {
         http_response_code(400); exit('CSRF');
     }
 
-    $paciente_id      = (int)($_POST['paciente_id'] ?? 0);
-    $especialista_id  = (int)($_POST['especialista_id'] ?? 0);
-    $fecha_asignacion = !empty($_POST['fecha_asignacion']) ? $_POST['fecha_asignacion'] : date('Y-m-d');
-    $estado           = trim($_POST['estado'] ?? '');
-    $nota             = trim($_POST['nota'] ?? '');
+    $paciente_id     = (int)$_POST['paciente_id'];
+    $especialista_id = (int)$_POST['especialista_id'];
+    $fecha_cita      = !empty($_POST['fecha_cita']) ? $_POST['fecha_cita'] : date('Y-m-d');
+    $prioridad       = $_POST['prioridad'];
+    $estado          = $_POST['estado'];
 
     $up = $conexion->prepare("UPDATE asignaciones
-      SET paciente_id=?, especialista_id=?, fecha_asignacion=?, estado=?, nota=?
-      WHERE id=?");
-    $up->execute([$paciente_id, $especialista_id, $fecha_asignacion, $estado, $nota, $id]);
+        SET paciente_id=?, especialista_id=?, fecha_cita=?, prioridad=?, estado=?
+        WHERE id=?");
 
-    header('Location: listar.php?ok=2'); exit;
+    $up->execute([$paciente_id, $especialista_id, $fecha_cita, $prioridad, $estado, $id]);
+
+    header("Location: listar.php?ok=2"); exit;
 }
 
 include __DIR__.'/../templates/header.php';
 ?>
-<style>.form-page{display:flex;justify-content:center}
-.form-card{max-width:800px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
-.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}
-.form-card-body{padding:16px}</style>
 
-<div class="form-page">
-  <div class="form-card">
-    <div class="form-card-head">Editar Asignación</div>
-    <div class="form-card-body">
-      <form method="POST" action="" class="row g-3">
-        <?php csrf_field(); ?>
-        <div class="col-md-4">
-          <label class="form-label">Paciente (ID)</label>
-          <input type="number" name="paciente_id" class="form-control" value="<?= (int)$a['paciente_id'] ?>" required>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Especialista (ID)</label>
-          <input type="number" name="especialista_id" class="form-control" value="<?= (int)$a['especialista_id'] ?>" required>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Fecha asignación</label>
-          <input type="date" name="fecha_asignacion" class="form-control" value="<?= htmlspecialchars($a['fecha_asignacion']) ?>">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Estado</label>
-          <input type="text" name="estado" class="form-control" value="<?= htmlspecialchars($a['estado']) ?>">
-        </div>
-        <div class="col-12">
-          <label class="form-label">Nota</label>
-          <textarea name="nota" class="form-control" rows="3"><?= htmlspecialchars($a['nota']) ?></textarea>
-        </div>
-        <div class="col-12 d-flex gap-2 justify-content-end">
-          <a href="../asignaciones/listar.php" class="btn btn-secondary">Cancelar</a>
-          <button class="btn btn-primary" type="submit">Actualizar</button>
-        </div>
-      </form>
+<div class="container py-3">
+  <h3>Editar Asignación</h3>
+
+  <form method="POST">
+    <?php csrf_field(); ?>
+
+    <label class="form-label">Paciente (ID)</label>
+    <input type="number" name="paciente_id" class="form-control"
+           value="<?= $a['paciente_id'] ?>" required>
+
+    <label class="form-label mt-2">Especialista (ID)</label>
+    <input type="number" name="especialista_id" class="form-control"
+           value="<?= $a['especialista_id'] ?>" required>
+
+    <label class="form-label mt-2">Fecha cita</label>
+    <input type="date" name="fecha_cita" class="form-control"
+           value="<?= htmlspecialchars($a['fecha_cita']) ?>">
+
+    <label class="form-label mt-2">Prioridad</label>
+    <select name="prioridad" class="form-select">
+      <option value="alta"   <?= $a['prioridad']==='alta'?'selected':'' ?>>Alta</option>
+      <option value="media"  <?= $a['prioridad']==='media'?'selected':'' ?>>Media</option>
+      <option value="baja"   <?= $a['prioridad']==='baja'?'selected':'' ?>>Baja</option>
+    </select>
+
+    <label class="form-label mt-2">Estado</label>
+    <select name="estado" class="form-select">
+      <option value="pendiente" <?= $a['estado']==='pendiente'?'selected':'' ?>>Pendiente</option>
+      <option value="atendido"  <?= $a['estado']==='atendido'?'selected':'' ?>>Atendido</option>
+      <option value="cancelado" <?= $a['estado']==='cancelado'?'selected':'' ?>>Cancelado</option>
+    </select>
+
+    <div class="mt-3">
+      <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+      <button class="btn btn-primary">Actualizar</button>
     </div>
-  </div>
+  </form>
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
