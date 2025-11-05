@@ -4,6 +4,7 @@ require_role('admin');
 require_once __DIR__ . '/../includes/conexion.php';
 
 $errors = [];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
@@ -12,11 +13,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username === '' || $password === '') {
         $errors[] = "Usuario y contraseña son obligatorios.";
     } else {
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $conexion->prepare("INSERT INTO usuarios (username, password, role) VALUES (?, ?, ?)");
-        $stmt->execute([$username, $hash, $role]);
-        header('Location: listar.php?msg=created');
-        exit;
+        try {
+            // Verificar si el usuario ya existe
+            $check = $conexion->prepare("SELECT id FROM usuarios WHERE username = ?");
+            $check->execute([$username]);
+
+            if ($check->fetch()) {
+                $errors[] = "El usuario '$username' ya existe.";
+            } else {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $conexion->prepare("INSERT INTO usuarios (username, password, role) VALUES (?, ?, ?)");
+                $stmt->execute([$username, $hash, $role]);
+                header('Location: listar.php?msg=created');
+                exit;
+            }
+        } catch (PDOException $e) {
+            $errors[] = "Error al crear usuario: " . $e->getMessage();
+        }
     }
 }
 
@@ -24,22 +37,30 @@ include __DIR__ . '/../templates/header.php';
 ?>
 
 <div class="container py-4">
-  <h3>Crear usuario</h3>
+  <h3><i class="bi bi-person-plus-fill me-2"></i>Crear usuario</h3>
+
   <?php if ($errors): foreach ($errors as $e): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($e) ?></div>
   <?php endforeach; endif; ?>
 
-  <form method="POST">
-    <div class="mb-3"><input name="username" class="form-control" placeholder="Usuario"></div>
-    <div class="mb-3"><input name="password" type="password" class="form-control" placeholder="Contraseña"></div>
+  <form method="POST" autocomplete="off">
+    <div class="mb-3">
+      <input name="username" class="form-control" placeholder="Usuario" required>
+    </div>
+    <div class="mb-3">
+      <input name="password" type="password" class="form-control" placeholder="Contraseña" required>
+    </div>
     <div class="mb-3">
       <select name="role" class="form-select">
         <option value="medico">Médico</option>
         <option value="secretaria">Secretaria</option>
-        <option value="admin">Admin</option>
+        <option value="admin">Administrador</option>
       </select>
     </div>
-    <div><button class="btn btn-success">Crear</button> <a href="listar.php" class="btn btn-secondary">Cancelar</a></div>
+    <div>
+      <button class="btn btn-success"><i class="bi bi-check-lg"></i> Crear</button>
+      <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+    </div>
   </form>
 </div>
 
