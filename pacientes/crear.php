@@ -13,16 +13,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $nombre            = trim($_POST['nombre'] ?? '');
     $apellido          = trim($_POST['apellido'] ?? '');
-    $fecha_nacimiento  = $_POST['fecha_nacimiento'] ?? null;
+
+    // ✅ Evitar error de fecha vacía
+    $fecha_nacimiento  = !empty($_POST['fecha_nacimiento']) ? $_POST['fecha_nacimiento'] : null;
     $genero            = $_POST['genero'] ?? null;
     $medico_referente  = trim($_POST['medico_referente'] ?? '');
     $motivo            = trim($_POST['motivo'] ?? '');
-    $fecha_referencia  = $_POST['fecha_referencia'] ?? null;
+
+    // ✅ Evitar error de fecha vacía
+    $fecha_referencia  = !empty($_POST['fecha_referencia']) ? $_POST['fecha_referencia'] : null;
 
     $stmt = $conexion->prepare("INSERT INTO pacientes 
         (nombre, apellido, fecha_nacimiento, genero, medico_referente, motivo, fecha_referencia)
         VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$nombre, $apellido, $fecha_nacimiento, $genero, $medico_referente, $motivo, $fecha_referencia]);
+
+    $stmt->execute([
+        $nombre,
+        $apellido,
+        $fecha_nacimiento,
+        $genero,
+        $medico_referente,
+        $motivo,
+        $fecha_referencia
+    ]);
 
     header('Location: listar.php?ok=1');
     exit;
@@ -59,10 +72,10 @@ box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
         <div class="col-md-4">
           <label class="form-label">Género</label>
           <select name="genero" class="form-select">
-  <option value="">—</option>
-  <option value="M">Masculino</option>
-  <option value="F">Femenino</option>
-</select>
+            <option value="">—</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Fecha referencia</label>
