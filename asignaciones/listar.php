@@ -32,12 +32,12 @@ if ($q !== '') {
 switch ($scope) {
     case 'day':
         $whereParts[] = "DATE(a.fecha_cita) = ?";
-        $params[] = preg_match('/^\d{4}-\d{2}-\d{2}$/',$day) ? $day : date('Y-m-d');
+        $params[] = $day;
         break;
 
     case 'month':
-        $first = preg_match('/^\d{4}-\d{2}$/',$month) ? "$month-01" : (date('Y-m')."-01");
-        $whereParts[] = "DATE(a.fecha_cita) BETWEEN ? AND LAST_DAY(?)";
+        $first = "$month-01";
+        $whereParts[] = "(DATE(a.fecha_cita) BETWEEN ? AND LAST_DAY(?))";
         $params[] = $first;
         $params[] = $first;
         break;
@@ -65,14 +65,15 @@ $sql = "SELECT a.id, a.fecha_cita, a.prioridad, a.estado,
 $stmt = $conexion->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 ?>
 <div class="topbar">
   <h2 class="mb-0">Asignaciones</h2>
 
   <div class="d-flex gap-2">
 
+    <!-- ✅ FORM ACTION CORREGIDO -->
     <form class="d-flex gap-2" method="get" action="listar.php">
+
       <input class="form-control" style="min-width:260px" type="search"
         name="q" placeholder="Buscar por paciente, especialista..."
         value="<?= htmlspecialchars($q) ?>">
@@ -97,6 +98,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php endif; ?>
     </form>
 
+    <!-- ✅ ENLACE CORRECTO -->
     <a class="btn btn-primary" href="crear.php">
       <i class="bi bi-plus-circle"></i> Nueva
     </a>
@@ -163,6 +165,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <input type="hidden" name="scope" value="month">
     <button class="btn btn-secondary">Ver mes</button>
 
+    <!-- ✅ RUTA CORRECTA -->
     <a class="btn btn-outline-dark ms-auto" href="listar.php">Hoy</a>
     <a class="btn btn-outline-dark" href="listar.php?scope=all">Todos</a>
   </form>
