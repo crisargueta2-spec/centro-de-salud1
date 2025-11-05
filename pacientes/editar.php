@@ -19,16 +19,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $nombre            = trim($_POST['nombre'] ?? '');
     $apellido          = trim($_POST['apellido'] ?? '');
-    $fecha_nacimiento  = $_POST['fecha_nacimiento'] ?? null;
+
+    // ✅ Evitar errores
+    $fecha_nacimiento  = !empty($_POST['fecha_nacimiento']) ? $_POST['fecha_nacimiento'] : null;
     $genero            = $_POST['genero'] ?? null;
     $medico_referente  = trim($_POST['medico_referente'] ?? '');
     $motivo            = trim($_POST['motivo'] ?? '');
-    $fecha_referencia  = $_POST['fecha_referencia'] ?? null;
+
+    // ✅ Evitar errores
+    $fecha_referencia  = !empty($_POST['fecha_referencia']) ? $_POST['fecha_referencia'] : null;
 
     $up = $conexion->prepare("UPDATE pacientes 
         SET nombre=?, apellido=?, fecha_nacimiento=?, genero=?, medico_referente=?, motivo=?, fecha_referencia=? 
         WHERE id=?");
-    $up->execute([$nombre, $apellido, $fecha_nacimiento, $genero, $medico_referente, $motivo, $fecha_referencia, $id]);
+
+    $up->execute([
+        $nombre,
+        $apellido,
+        $fecha_nacimiento,
+        $genero,
+        $medico_referente,
+        $motivo,
+        $fecha_referencia,
+        $id
+    ]);
 
     header('Location: listar.php?ok=2');
     exit;
@@ -36,8 +50,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include __DIR__.'/../templates/header.php';
 ?>
-<!-- mismo estilo que crear -->
-<style>.form-page{display:flex;justify-content:center}.form-card{max-width:800px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}.form-card-body{padding:16px}</style>
+<style>
+.form-page{display:flex;justify-content:center}
+.form-card{max-width:800px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
+.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}
+.form-card-body{padding:16px}
+</style>
 
 <div class="form-page">
   <div class="form-card">
@@ -60,10 +78,10 @@ include __DIR__.'/../templates/header.php';
         <div class="col-md-4">
           <label class="form-label">Género</label>
           <select name="genero" class="form-select">
-  <option value="">—</option>
-  <option value="M" <?= ($p['genero'] ?? '') === 'M' ? 'selected' : '' ?>>Masculino</option>
-  <option value="F" <?= ($p['genero'] ?? '') === 'F' ? 'selected' : '' ?>>Femenino</option>
-</select>
+            <option value="">—</option>
+            <option value="M" <?= ($p['genero'] ?? '') === 'M' ? 'selected' : '' ?>>Masculino</option>
+            <option value="F" <?= ($p['genero'] ?? '') === 'F' ? 'selected' : '' ?>>Femenino</option>
+          </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Fecha referencia</label>
@@ -78,7 +96,7 @@ include __DIR__.'/../templates/header.php';
           <textarea name="motivo" class="form-control" rows="3"><?= htmlspecialchars($p['motivo']) ?></textarea>
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
-         <a href="../pacientes/listar.php" class="btn btn-secondary">Cancelar</a>
+          <a href="../pacientes/listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary" type="submit">Actualizar</button>
         </div>
       </form>
