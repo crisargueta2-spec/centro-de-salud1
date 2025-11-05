@@ -9,10 +9,10 @@ $scope  = $_GET['scope'] ?? 'today';
 $day    = $_GET['day']   ?? date('Y-m-d');
 $month  = $_GET['month'] ?? date('Y-m');
 
-$whereParts = [];
-$params = [];
+$whereParts=[]; 
+$params=[];
 
-// ✅ Búsqueda segura (NO compara fechas con texto)
+// ✅ Búsqueda segura
 if ($q !== '') {
     $like = '%' . str_replace(' ', '%', $q) . '%';
 
@@ -21,6 +21,7 @@ if ($q !== '') {
         "(t.diagnostico LIKE ? OR t.plan LIKE ? OR t.estado LIKE ?)"
     ];
 
+    // Comparar fechas solo si $q es una fecha válida
     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $q)) {
         $parts[] = "(DATE(t.fecha_inicio)=? OR DATE(t.fecha_fin)=?)";
         $params = array_merge($params, [$like,$like,$like,$like,$like,$like,$q,$q]);
@@ -37,40 +38,50 @@ switch ($scope) {
         $whereParts[] = "DATE(t.fecha_inicio) = ?";
         $params[] = $day;
         break;
+
     case 'month':
         $first = $month . "-01";
         $whereParts[] = "DATE(t.fecha_inicio) BETWEEN ? AND LAST_DAY(?)";
         $params[] = $first;
         $params[] = $first;
         break;
-    case 'today':
+
+    case 'all':
+        break;
+
     default:
+    case 'today':
         $whereParts[] = "DATE(t.fecha_inicio) = CURDATE()";
         break;
 }
 
-$where = $whereParts ? ('WHERE '.implode(' AND ', $whereParts)) : '';
+$where = $whereParts ? ("WHERE ".implode(" AND ", $whereParts)) : "";
 
-$sql = "SELECT t.id, t.paciente_id, t.diagnostico,
-               COALESCE(t.plan, '') AS plan_texto,
-               t.estado, t.fecha_inicio, t.fecha_fin,
-               p.nombre, p.apellido
+// ✅ Consulta final
+$sql = "SELECT 
+            t.id, t.paciente_id, t.diagnostico,
+            COALESCE(t.plan,'') AS plan_texto,
+            t.estado, t.fecha_inicio, t.fecha_fin,
+            p.nombre, p.apellido
         FROM tratamientos t
         JOIN pacientes p ON p.id = t.paciente_id
         $where
-        ORDER BY t.fecha_inicio DESC";
+        ORDER BY t.fecha_inicio DESC, t.id DESC";
 
 $stmt = $conexion->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// permisos
 $rol = strtolower(user()['rol'] ?? '');
 $canWrite = in_array($rol, ['admin','medico']);
 ?>
 <div class="topbar">
   <h2 class="mb-0">Tratamientos</h2>
   <div class="d-flex gap-2">
-    <form class="d-flex gap-2" method="get" action="">
+    
+    <!-- ✅ BÚSQUEDA CORRECTA -->
+    <form class="d-flex gap-2" method="get">
       <input class="form-control" style="min-width:260px"
              type="search" name="q"
              placeholder="Buscar por paciente, diagnóstico, estado..."
@@ -85,11 +96,11 @@ $canWrite = in_array($rol, ['admin','medico']);
 
       <input class="form-control" type="date" name="day"
              value="<?= htmlspecialchars($day) ?>"
-             <?= $scope==='day' ? '' : 'disabled' ?>>
+             <?= $scope==='day'?'':'disabled' ?>>
 
       <input class="form-control" type="month" name="month"
              value="<?= htmlspecialchars($month) ?>"
-             <?= $scope==='month' ? '' : 'disabled' ?>>
+             <?= $scope==='month'?'':'disabled' ?>>
 
       <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
 
@@ -106,16 +117,22 @@ $canWrite = in_array($rol, ['admin','medico']);
   </div>
 </div>
 
-<div class="table-card mt-2">
+<div class="table-card mt-3">
   <div class="table-responsive">
     <table class="table table-bordered table-hover align-middle">
       <thead class="table-primary">
         <tr>
-          <th>Paciente</th><th>Diagnóstico</th><th>Plan</th><th>Estado</th><th>Inicio</th><th>Fin</th>
+          <th>Paciente</th>
+          <th>Diagnóstico</th>
+          <th>Plan</th>
+          <th>Estado</th>
+          <th>Inicio</th>
+          <th>Fin</th>
           <th class="no-print">Acciones</th>
         </tr>
       </thead>
       <tbody>
+
         <?php foreach($rows as $r): ?>
         <tr>
           <td><?= htmlspecialchars($r['nombre'].' '.$r['apellido']) ?></td>
@@ -126,20 +143,41 @@ $canWrite = in_array($rol, ['admin','medico']);
           <td><?= htmlspecialchars($r['fecha_fin']) ?></td>
           <td class="no-print">
             <?php if ($canWrite): ?>
-              <a class="btn btn-sm btn-outline-secondary" href="editar.php?id=<?= $r['id'] ?>">Editar</a>
-              <a class="btn btn-sm btn-outline-danger" 
-                 href="eliminar.php?id=<?= $r['id'] ?>"
+              <a href="editar.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-secondary">Editar</a>
+              <a href="eliminar.php?id=<?= $r['id'] ?>" 
+                 class="btn btn-sm btn-outline-danger"
                  onclick="return confirm('¿Eliminar tratamiento?')">Eliminar</a>
             <?php endif; ?>
           </td>
         </tr>
         <?php endforeach; ?>
+
         <?php if(empty($rows)): ?>
         <tr><td colspan="7" class="text-center text-muted">Sin resultados</td></tr>
         <?php endif; ?>
+
       </tbody>
     </table>
   </div>
+
+  <!-- ✅ FILTROS RÁPIDOS -->
+  <form class="d-flex gap-2 mt-3 no-print" method="get">
+    <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
+    <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
+
+    <input class="form-control" type="date" name="day" value="<?= htmlspecialchars($day) ?>">
+    <input type="hidden" name="scope" value="day">
+    <button class="btn btn-secondary">Ver día</button>
+
+    <div class="vr mx-2"></div>
+
+    <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>">
+    <input type="hidden" name="scope" value="month">
+    <button class="btn btn-secondary">Ver mes</button>
+
+    <a class="btn btn-outline-dark ms-auto" href="listar.php">Hoy</a>
+    <a class="btn btn-outline-dark" href="listar.php?scope=all">Todos</a>
+  </form>
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
