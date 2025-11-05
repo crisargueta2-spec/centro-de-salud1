@@ -5,28 +5,35 @@ require_once __DIR__ . '/../includes/conexion.php';
 include __DIR__ . '/../templates/header.php';
 
 $q      = trim($_GET['q'] ?? '');
-$scope  = $_GET['scope'] ?? 'today';  // today | day | month | all
+$scope  = $_GET['scope'] ?? 'today';
 $day    = $_GET['day']   ?? date('Y-m-d');
 $month  = $_GET['month'] ?? date('Y-m');
 
 $whereParts = [];
 $params = [];
 
-// 🔍 Búsqueda
+// 🔍 Búsqueda mejorada
 if ($q !== '') {
   $like = '%' . str_replace(' ', '%', $q) . '%';
   $parts = [
     "(p.nombre LIKE ? OR p.apellido LIKE ? OR CONCAT(p.nombre,' ',p.apellido) LIKE ?)",
     "(p.genero LIKE ?)",
-    "(p.motivo LIKE ?)",
-    "(DATE(p.fecha_referencia)=? OR DATE(p.fecha_nacimiento)=?)"
+    "(p.motivo LIKE ?)"
   ];
-  $params = array_merge($params, [$like, $like, $like, $like, $like, $q, $q]);
+
+  // Solo agregar comparación por fecha si $q parece una fecha
+  if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $q)) {
+    $parts[] = "(DATE(p.fecha_referencia)=? OR DATE(p.fecha_nacimiento)=?)";
+    $params = array_merge($params, [$like, $like, $like, $like, $like, $q, $q]);
+  } else {
+    $params = array_merge($params, [$like, $like, $like, $like, $like]);
+  }
 
   if (ctype_digit($q) && (int)$q <= 120) {
     $parts[] = "TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) = ?";
     $params[] = (int)$q;
   }
+
   $whereParts[] = '(' . implode(' OR ', $parts) . ')';
 }
 
@@ -44,7 +51,6 @@ switch ($scope) {
     break;
   case 'all':
     break;
-  case 'today':
   default:
     $whereParts[] = "DATE(p.fecha_referencia) = CURDATE()";
     break;
@@ -79,10 +85,8 @@ $rol  = strtolower($user['rol'] ?? ($user['role'] ?? ''));
         <option value="all"   <?= $scope === 'all' ? 'selected' : '' ?>>Todos</option>
       </select>
 
-      <input class="form-control" type="date"  name="day"
-             value="<?= htmlspecialchars($day) ?>"   <?= $scope === 'day' ? '' : 'disabled' ?>>
-      <input class="form-control" type="month" name="month"
-             value="<?= htmlspecialchars($month) ?>" <?= $scope === 'month' ? '' : 'disabled' ?>>
+      <input class="form-control" type="date"  name="day"   value="<?= htmlspecialchars($day) ?>"   <?= $scope === 'day' ? '' : 'disabled' ?>>
+      <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>" <?= $scope === 'month' ? '' : 'disabled' ?>>
 
       <button class="btn btn-outline-secondary" type="submit">
         <i class="bi bi-search"></i>
@@ -110,37 +114,28 @@ $rol  = strtolower($user['rol'] ?? ($user['role'] ?? ''));
     <table class="table table-hover table-bordered align-middle">
       <thead class="table-info">
         <tr>
-          <th>Paciente</th>
-          <th>Género</th>
-          <th>Nacimiento</th>
-          <th>Ingreso</th>
-          <th>Motivo</th>
+          <th>Paciente</th><th>Género</th><th>Nacimiento</th><th>Ingreso</th><th>Motivo</th>
           <?php if ($rol !== 'medico'): ?>
             <th class="no-print" style="width:150px">Acciones</th>
           <?php endif; ?>
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($rows as $r): ?>
+        <?php foreach($rows as $r): ?>
           <tr>
-            <td><?= htmlspecialchars($r['nombre'] . ' ' . $r['apellido']) ?></td>
+            <td><?= htmlspecialchars($r['nombre'].' '.$r['apellido']) ?></td>
             <td><?= htmlspecialchars($r['genero']) ?></td>
             <td><?= htmlspecialchars($r['fecha_nacimiento']) ?></td>
             <td><?= htmlspecialchars($r['fecha_referencia']) ?></td>
             <td><?= nl2br(htmlspecialchars($r['motivo'])) ?></td>
             <?php if ($rol !== 'medico'): ?>
               <td class="no-print">
-                <a class="btn btn-sm btn-outline-secondary"
-                   href="pacientes/editar.php?id=<?= $r['id'] ?>">Editar</a>
-                <a class="btn btn-sm btn-outline-danger"
-                   href="pacientes/eliminar.php?id=<?= $r['id'] ?>"
-                   onclick="return confirm('¿Eliminar paciente?')">Eliminar</a>
+                <a class="btn btn-sm btn-outline-secondary" href="pacientes/editar.php?id=<?= $r['id'] ?>">Editar</a>
+                <a class="btn btn-sm btn-outline-danger" href="pacientes/eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar paciente?')">Eliminar</a>
               </td>
             <?php endif; ?>
           </tr>
-        <?php endforeach; ?>
-
-        <?php if (empty($rows)): ?>
+        <?php endforeach; if(empty($rows)): ?>
           <tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>
         <?php endif; ?>
       </tbody>
