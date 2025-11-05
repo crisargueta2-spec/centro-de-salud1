@@ -182,4 +182,3 @@ $canWrite = in_array($rol, ['admin','medico']);
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
-
