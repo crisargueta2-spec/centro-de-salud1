@@ -5,9 +5,9 @@ require_once __DIR__.'/../includes/conexion.php';
 
 $id = (int)($_GET['id'] ?? 0);
 
-if($id){
-    $stmt = $conn->prepare("DELETE FROM seguimientos WHERE id=?");
-    $stmt->execute([$id]);
+if ($id) {
+  $stmt = $conexion->prepare("DELETE FROM seguimientos WHERE id = ?");
+  $stmt->execute([$id]);
 }
 
 header("Location: /seguimientos/listar.php?ok=3");
