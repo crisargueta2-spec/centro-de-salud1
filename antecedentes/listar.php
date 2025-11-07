@@ -20,7 +20,6 @@ if ($q !== '') {
     "(a.tipo LIKE ? OR a.descripcion LIKE ?)"
   ];
 
-  // Si parece una fecha válida, comparar también fechas
   if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $q)) {
     $parts[] = "(DATE(a.fecha_registro)=?)";
     $params = array_merge($params, [$like,$like,$like,$like,$like,$q]);
@@ -67,7 +66,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class='topbar'>
   <h2 class='mb-0'>Antecedentes</h2>
   <div class='d-flex gap-2'>
-    <form class='d-flex gap-2' method='get' action='listar.php'>
+    <form class='d-flex gap-2' method='get' action='antecedentes/listar.php'>
       <input class='form-control' style='min-width:260px' type='search' name='q'
              placeholder='Buscar por paciente, tipo, descripción o fecha...'
              value='<?= htmlspecialchars($q) ?>'>
@@ -84,11 +83,12 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       <button class='btn btn-outline-secondary' type='submit'><i class='bi bi-search'></i></button>
       <?php if($q!=='' || $scope!=='today'): ?>
-        <a class='btn btn-outline-dark' href='listar.php'>Limpiar</a>
+        <a class='btn btn-outline-dark' href='antecedentes/listar.php'>Limpiar</a>
       <?php endif; ?>
     </form>
 
-    <a class='btn btn-primary' href='crear.php'>
+    <!-- ✅ BOTÓN NUEVO AJUSTADO -->
+    <a class='btn btn-primary' href='antecedentes/crear.php'>
       <i class='bi bi-plus-circle'></i> Nuevo
     </a>
   </div>
@@ -111,8 +111,8 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><span class='badge text-bg-secondary'><?= htmlspecialchars($r['tipo']) ?></span></td>
             <td><?= nl2br(htmlspecialchars($r['descripcion'])) ?></td>
             <td class='no-print'>
-              <a class='btn btn-sm btn-outline-secondary' href='editar.php?id=<?= $r['id'] ?>'>Editar</a>
-              <a class='btn btn-sm btn-outline-danger' href='eliminar.php?id=<?= $r['id'] ?>' onclick="return confirm('¿Eliminar antecedente?')">Eliminar</a>
+              <a class='btn btn-sm btn-outline-secondary' href='antecedentes/editar.php?id=<?= $r['id'] ?>'>Editar</a>
+              <a class='btn btn-sm btn-outline-danger' href='antecedentes/eliminar.php?id=<?= $r['id'] ?>' onclick="return confirm('¿Eliminar antecedente?')">Eliminar</a>
             </td>
           </tr>
         <?php endforeach; else: ?>
@@ -122,8 +122,8 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </table>
   </div>
 
-  <!-- Filtros rápidos -->
-  <form class='d-flex gap-2 mt-3 no-print' method='get' action='listar.php'>
+  <!-- ✅ FILTROS RÁPIDOS (AJUSTADOS) -->
+  <form class='d-flex gap-2 mt-3 no-print' method='get' action='antecedentes/listar.php'>
     <input type='hidden' name='q' value='<?= htmlspecialchars($q) ?>'>
     <label class='form-label m-0 align-self-center'>Ver por día/mes:</label>
     <input class='form-control' type='date' name='day' value='<?= htmlspecialchars($day) ?>'>
@@ -133,8 +133,8 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <input class='form-control' type='month' name='month' value='<?= htmlspecialchars($month) ?>'>
     <input type='hidden' name='scope' value='month'>
     <button class='btn btn-secondary'>Ver mes</button>
-    <a class='btn btn-outline-dark ms-auto' href='listar.php'>Hoy</a>
-    <a class='btn btn-outline-dark' href='listar.php?scope=all'>Todos</a>
+    <a class='btn btn-outline-dark ms-auto' href='antecedentes/listar.php'>Hoy</a>
+    <a class='btn btn-outline-dark' href='antecedentes/listar.php?scope=all'>Todos</a>
   </form>
 </div>
 
