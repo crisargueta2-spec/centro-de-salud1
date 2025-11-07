@@ -145,22 +145,23 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <td><?= htmlspecialchars($r['fecha_cita']) ?></td>
           <td><?= htmlspecialchars($r['estado']) ?></td>
 
-          <td class="no-print">
-            <!-- ✅ BOTÓN EDITAR -->
-            <a class="btn btn-sm btn-outline-secondary"
-               href="/asignaciones/editar.php?id=<?= $r['id'] ?>">Editar</a>
+        <td class="no-print">
+  <!-- ✅ BOTÓN EDITAR -->
+  <a class="btn btn-sm btn-outline-secondary"
+     href="/asignaciones/editar.php?id=<?= $r['id'] ?>">Editar</a>
 
-            <!-- ✅ BOTÓN ELIMINAR -->
-            <a class="btn btn-sm btn-outline-danger"
-               href="/asignaciones/eliminar.php?id=<?= $r['id'] ?>"
-               onclick="return confirm('¿Eliminar asignación?')">Eliminar</a>
-              <!-- ✅ BOTÓN IMPRIMIR COMPROBANTE -->
-<a class="btn btn-sm btn-outline-primary"
-   href="/asignaciones/comprobante.php?id=<?= $r['id'] ?>"
-   target="_blank">
-   <i class="bi bi-printer"></i> Imprimir
-</a>
-          </td>
+  <!-- ✅ BOTÓN ELIMINAR -->
+  <a class="btn btn-sm btn-outline-danger"
+     href="/asignaciones/eliminar.php?id=<?= $r['id'] ?>"
+     onclick="return confirm('¿Eliminar asignación?')">Eliminar</a>
+
+  <!-- ✅ BOTÓN IMPRIMIR COMPROBANTE -->
+  <a class="btn btn-sm btn-outline-primary"
+     href="/asignaciones/comprobante.php?id=<?= $r['id'] ?>"
+     target="_blank">
+     <i class="bi bi-printer"></i> Imprimir
+  </a>
+</td>
         </tr>
       <?php endforeach; ?>
 
