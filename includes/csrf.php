@@ -1,11 +1,7 @@
 <?php
 // Protección CSRF universal
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start([
-        'cookie_httponly' => true,
-        'cookie_secure' => isset($_SERVER['HTTPS']),
-        'cookie_samesite' => 'Lax'
-    ]);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
 /**
@@ -29,15 +25,15 @@ function csrf_field() {
 /**
  * Verifica que el token recibido sea válido
  */
-function csrf_validate($token) {
+function csrf_verify($token) {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token ?? '');
 }
 
 /**
- * Alias retrocompatible — algunos módulos usan csrf_verify()
+ * Alias compatible (por si el código llama csrf_validate)
  */
-function csrf_verify($token) {
-    return csrf_validate($token);
+function csrf_validate($token) {
+    return csrf_verify($token);
 }
 ?>
 
