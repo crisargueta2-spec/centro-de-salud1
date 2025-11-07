@@ -87,10 +87,10 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php endif; ?>
     </form>
 
-    <!-- ✅ BOTÓN NUEVO AJUSTADO -->
-    <a class='btn btn-primary' href='antecedentes/crear.php'>
-      <i class='bi bi-plus-circle'></i> Nuevo
-    </a>
+   <!-- ✅ BOTÓN NUEVO AJUSTADO -->
+<a class='btn btn-primary' href='../antecedentes/crear.php'>
+  <i class='bi bi-plus-circle'></i> Nuevo
+</a>
   </div>
 </div>
 
