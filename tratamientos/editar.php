@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ");
     $up->execute([$paciente_id,$diagnostico,$plan,$plan,$estado,$fecha_inicio,$fecha_fin,$id]);
 
-    header('Location: tratamientos/listar.php?ok=2');
+    header('Location: listar.php?ok=2');
     exit;
 }
 
