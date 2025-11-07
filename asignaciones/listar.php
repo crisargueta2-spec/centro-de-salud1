@@ -154,6 +154,12 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <a class="btn btn-sm btn-outline-danger"
                href="/asignaciones/eliminar.php?id=<?= $r['id'] ?>"
                onclick="return confirm('¿Eliminar asignación?')">Eliminar</a>
+              <!-- ✅ BOTÓN IMPRIMIR COMPROBANTE -->
+<a class="btn btn-sm btn-outline-primary"
+   href="/asignaciones/comprobante.php?id=<?= $r['id'] ?>"
+   target="_blank">
+   <i class="bi bi-printer"></i> Imprimir
+</a>
           </td>
         </tr>
       <?php endforeach; ?>
