@@ -8,7 +8,7 @@ require_once __DIR__.'/../includes/csrf.php';
 $pacientes = $conexion->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre, apellido")->fetchAll(PDO::FETCH_ASSOC);
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
-  if(!csrf_validate($_POST['csrf'] ?? '')){ http_response_code(400); exit('CSRF'); }
+  if(!csrf_validate($_POST['csrf_token'] ?? '')){ http_response_code(400); exit('CSRF'); }
 
   $paciente_id = (int)($_POST['paciente_id'] ?? 0);
   $tipo = $_POST['tipo'] ?? '';
