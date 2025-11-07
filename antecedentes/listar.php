@@ -115,8 +115,7 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <a class="btn btn-sm btn-outline-secondary" href="../antecedentes/editar.php?id=<?= $r['id'] ?>">Editar</a>
 <a class="btn btn-sm btn-outline-danger" href="../antecedentes/eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar antecedente?')">Eliminar</a>
 
-<!-- botón superior -->
-<a class="btn btn-primary" href="../antecedentes/crear.php"><i class="bi bi-plus-circle"></i> Nuevo</a>
+              
             </td>
           </tr>
         <?php endforeach; else: ?>
