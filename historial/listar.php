@@ -5,16 +5,14 @@ require_once __DIR__.'/../includes/conexion.php';
 include __DIR__.'/../templates/header.php';
 
 $q      = trim($_GET['q'] ?? '');
-$scope  = $_GET['scope'] ?? 'today';  // today | day | month | all
+$scope  = $_GET['scope'] ?? 'today';
 $day    = $_GET['day']   ?? date('Y-m-d');
 $month  = $_GET['month'] ?? date('Y-m');
 
 $whereParts = [];
 $params = [];
 
-/* ==============================
-   🔍 BÚSQUEDA GENERAL
-============================== */
+/* 🔍 BÚSQUEDA GENERAL */
 if ($q !== '') {
   $like = '%'.str_replace(' ', '%', $q).'%';
   $parts = [
@@ -23,13 +21,11 @@ if ($q !== '') {
   ];
   $params = array_merge($params, [$like,$like,$like,$like]);
 
-  // Fecha exacta (si el texto parece una fecha válida)
   if (preg_match('/^\d{4}-\d{2}-\d{2}$/',$q)) {
     $parts[] = "(DATE(p.fecha_referencia)=?)";
     $params[] = $q;
   }
 
-  // Edad (si el texto es un número de edad válido)
   if (ctype_digit($q) && (int)$q <= 120) {
     $parts[] = "(TIMESTAMPDIFF(YEAR, p.fecha_nacimiento, CURDATE()) = ?)";
     $params[] = (int)$q;
@@ -38,38 +34,29 @@ if ($q !== '') {
   $whereParts[] = '(' . implode(' OR ', $parts) . ')';
 }
 
-/* ==============================
-   📅 FILTRO POR FECHAS
-============================== */
+/* 📅 FILTRO DE FECHAS */
 switch ($scope) {
   case 'day':
-    $whereParts[] = "DATE(COALESCE(p.fecha_referencia, p.created_at, NOW())) = ?";
-    $params[] = preg_match('/^\d{4}-\d{2}-\d{2}$/',$day) ? $day : date('Y-m-d');
+    $whereParts[] = "DATE(p.fecha_referencia) = ?";
+    $params[] = $day;
     break;
-
   case 'month':
-    $first = preg_match('/^\d{4}-\d{2}$/',$month) ? ($month.'-01') : (date('Y-m').'-01');
-    $whereParts[] = "DATE(COALESCE(p.fecha_referencia, p.created_at, NOW())) BETWEEN ? AND LAST_DAY(?)";
-    $params[] = $first; 
+    $first = $month.'-01';
+    $whereParts[] = "DATE(p.fecha_referencia) BETWEEN ? AND LAST_DAY(?)";
+    $params[] = $first;
     $params[] = $first;
     break;
-
   case 'all':
-    // sin filtro (mostrar todos)
     break;
-
-  case 'today':
-  default:
-    // Mostrar por defecto los ingresados hoy o recientemente (últimos 3 días)
-    $whereParts[] = "DATE(COALESCE(p.fecha_referencia, p.created_at, NOW())) >= CURDATE() - INTERVAL 3 DAY";
+  default: // today
+    // mostrar los últimos 3 días
+    $whereParts[] = "p.fecha_referencia >= CURDATE() - INTERVAL 3 DAY";
     break;
 }
 
 $where = $whereParts ? ('WHERE '.implode(' AND ',$whereParts)) : '';
 
-/* ==============================
-   🧠 CONSULTA PRINCIPAL
-============================== */
+/* 🧠 CONSULTA PRINCIPAL */
 $sql = "
 SELECT
   p.id,
@@ -99,8 +86,17 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <style>
 @media print {
-  .sidebar,.topbar,.toggle-btn,.no-print{display:none!important}
-  .content{padding:0!important}.table-card{box-shadow:none!important}
+  /* Ocultar elementos al imprimir */
+  .sidebar, .topbar, .toggle-btn, .no-print {
+    display: none !important;
+  }
+  .content {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .table-card {
+    box-shadow: none !important;
+  }
 }
 .small-muted{font-size:.9rem;color:#6c757d}
 </style>
@@ -170,7 +166,6 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </table>
   </div>
 
-  <!-- 📅 Atajo inferior -->
   <form class="d-flex gap-2 mt-3 no-print" method="get" action="../historial/listar.php">
     <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
     <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
