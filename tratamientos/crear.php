@@ -68,7 +68,7 @@ include __DIR__.'/../templates/header.php';
   <div class="form-card">
     <div class="form-card-head">Nuevo Tratamiento</div>
     <div class="form-card-body">
-      <form method="POST" action="crear.php" class="row g-3">
+      <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" class="row g-3">
         <?php csrf_field(); ?>
 
         <div class="col-12">
