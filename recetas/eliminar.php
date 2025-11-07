@@ -4,15 +4,9 @@ require_role(['admin','medico']);
 require_once __DIR__.'/../includes/conexion.php';
 
 $id = (int)($_GET['id'] ?? 0);
-if ($id <= 0) {
-  http_response_code(400);
-  exit('ID inválido');
-}
+if ($id <= 0) { http_response_code(400); exit('ID inválido'); }
 
-// Borrar primero los items asociados
 $conexion->prepare("DELETE FROM receta_items WHERE receta_id=?")->execute([$id]);
-
-// Luego borrar la receta principal
 $conexion->prepare("DELETE FROM recetas WHERE id=?")->execute([$id]);
 
 header('Location: /recetas/listar.php?ok=deleted');
