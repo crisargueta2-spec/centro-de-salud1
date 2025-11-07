@@ -5,22 +5,35 @@ require_once __DIR__.'/../includes/conexion.php';
 include __DIR__.'/../templates/header.php';
 
 $id = (int)($_GET['id'] ?? 0);
-$s = $conn->prepare("SELECT r.*, p.nombre, p.apellido, u.username AS medico, t.diagnostico
-                     FROM recetas r
-                     JOIN pacientes p ON p.id = r.paciente_id
-                     LEFT JOIN usuarios u ON u.id = r.medico_id
-                     LEFT JOIN tratamientos t ON t.id = r.tratamiento_id
-                     WHERE r.id=?");
+
+// ✅ usar $conexion (no $conn)
+$s = $conexion->prepare("SELECT r.*, p.nombre, p.apellido, u.username AS medico, t.diagnostico
+                         FROM recetas r
+                         JOIN pacientes p ON p.id = r.paciente_id
+                         LEFT JOIN usuarios u ON u.id = r.medico_id
+                         LEFT JOIN tratamientos t ON t.id = r.tratamiento_id
+                         WHERE r.id=?");
 $s->execute([$id]);
 $rec = $s->fetch(PDO::FETCH_ASSOC);
 if (!$rec) { http_response_code(404); exit('No encontrada'); }
 
-$items = $conn->prepare("SELECT * FROM receta_items WHERE receta_id=? ORDER BY id");
+// ✅ Traer los ítems con la conexión correcta
+$items = $conexion->prepare("SELECT * FROM receta_items WHERE receta_id=? ORDER BY id");
 $items->execute([$id]);
 $lines = $items->fetchAll(PDO::FETCH_ASSOC);
+
+// ✅ Usuario logueado (para firma)
+$user = user();
+$medicoLog = htmlspecialchars($user['username'] ?? '—');
 ?>
 <style>
-@media print { .no-print{display:none!important} body{background:#fff!important;} }
+body { background:#f8f9fa; }
+@media print { 
+  .no-print {display:none!important}
+  .sidebar, .toggle-btn, .topbar {display:none!important}
+  .content {padding:0!important;margin:0!important}
+  body {background:#fff!important;}
+}
 .comprobante-header {
   background:#0d6efd;
   color:#fff;
@@ -43,13 +56,14 @@ $lines = $items->fetchAll(PDO::FETCH_ASSOC);
 }
 </style>
 
-<div class="comprobante-header">
-  <img src="../assets/logo.png" alt="Logo">
+<div class="comprobante-header no-print">
+  <img src="../assets/logo.png" alt="Logo" onerror="this.style.display='none'">
   <div>
-    <h4 class="m-0 fw-bold">Centro de Salud Sur</h4>
+    <h4 class="m-0 fw-bold">Centro de Salud Sur de Huehuetenango</h4>
     <small>Receta médica</small>
   </div>
-  <div class="ms-auto no-print">
+  <div class="ms-auto d-flex gap-2">
+    <a href="/recetas/listar.php" class="btn btn-light btn-sm">Volver</a>
     <button class="btn btn-outline-light btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
   </div>
 </div>
@@ -58,10 +72,10 @@ $lines = $items->fetchAll(PDO::FETCH_ASSOC);
   <div class="row g-3">
     <div class="col-md-4"><b>Paciente:</b> <?= htmlspecialchars($rec['nombre'].' '.$rec['apellido']) ?></div>
     <div class="col-md-4"><b>Fecha:</b> <?= htmlspecialchars($rec['fecha_emision']) ?></div>
-    <div class="col-md-4"><b>Médico:</b> <?= htmlspecialchars($rec['medico'] ?? '') ?></div>
+    <div class="col-md-4"><b>Médico:</b> <?= htmlspecialchars($rec['medico'] ?? '—') ?></div>
     <div class="col-12"><b>Diagnóstico:</b> <?= htmlspecialchars($rec['diagnostico'] ?? '—') ?></div>
     <?php if(!empty($rec['observaciones'])): ?>
-    <div class="col-12"><b>Observaciones:</b> <?= nl2br(htmlspecialchars($rec['observaciones'])) ?></div>
+      <div class="col-12"><b>Observaciones:</b> <?= nl2br(htmlspecialchars($rec['observaciones'])) ?></div>
     <?php endif; ?>
   </div>
 </div>
@@ -92,6 +106,13 @@ $lines = $items->fetchAll(PDO::FETCH_ASSOC);
       </tbody>
     </table>
   </div>
+</div>
+
+<div class="text-end mt-4 pe-3">
+  <hr>
+  <b>Emitida por:</b> <?= htmlspecialchars($rec['medico'] ?? $medicoLog) ?><br>
+  <span class="text-muted small">Centro de Salud Sur de Huehuetenango</span><br>
+  <span class="text-muted small">Generada electrónicamente — <?= date('d/m/Y H:i') ?></span>
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
