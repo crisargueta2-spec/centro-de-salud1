@@ -1,143 +1,101 @@
 <?php
 require_once __DIR__.'/../includes/auth.php';
-require_role(['admin','secretaria','medico']);
+require_role(['admin','medico']);
 require_once __DIR__.'/../includes/conexion.php';
+require_once __DIR__.'/../includes/csrf.php';
+
+$paciente_id = (int)($_GET['paciente_id'] ?? 0);
+
+// Pacientes
+$pacientes = $conexion->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre, apellido")->fetchAll(PDO::FETCH_ASSOC);
+
+// Tratamientos del paciente (si aplica)
+$tratamientos = [];
+if ($paciente_id) {
+    $stmt = $conexion->prepare("SELECT id, diagnostico FROM tratamientos WHERE paciente_id = ?");
+    $stmt->execute([$paciente_id]);
+    $tratamientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Procesar formulario
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+        http_response_code(400);
+        exit('CSRF');
+    }
+
+    $paciente_id = (int)($_POST['paciente_id'] ?? 0);
+    $tratamiento_id = !empty($_POST['tratamiento_id']) ? (int)$_POST['tratamiento_id'] : null;
+    $medico_id = user()['id'] ?? null;
+    $fecha_emision = $_POST['fecha_emision'] ?? date('Y-m-d');
+    $observaciones = trim($_POST['observaciones'] ?? '');
+
+    $sql = "INSERT INTO recetas (paciente_id, tratamiento_id, medico_id, fecha_emision, observaciones)
+            VALUES (?,?,?,?,?)";
+    $stmt = $conexion->prepare($sql);
+    $stmt->execute([$paciente_id, $tratamiento_id, $medico_id, $fecha_emision, $observaciones]);
+
+    // 🔁 Redirigir correctamente
+    header('Location: ../recetas/ver.php?id=' . $conexion->lastInsertId());
+    exit;
+}
+
 include __DIR__.'/../templates/header.php';
-
-$q      = trim($_GET['q'] ?? '');
-$scope  = $_GET['scope'] ?? 'today';
-$day    = $_GET['day']   ?? date('Y-m-d');
-$month  = $_GET['month'] ?? date('Y-m');
-
-$whereParts = [];
-$params = [];
-
-// 🔍 Búsqueda (incluye medicamentos)
-if ($q !== '') {
-  $like = '%'.str_replace(' ', '%', $q).'%';
-  $whereParts[] = "(p.nombre LIKE ? OR p.apellido LIKE ? OR CONCAT(p.nombre,' ',p.apellido) LIKE ?
-                    OR t.diagnostico LIKE ? OR u.username LIKE ?
-                    OR r.observaciones LIKE ? OR DATE(r.fecha_emision)=?
-                    OR EXISTS (SELECT 1 FROM receta_items ri WHERE ri.receta_id=r.id 
-                               AND (ri.medicamento LIKE ? OR ri.indicaciones LIKE ?)))";
-  $params = array_merge($params, [$like,$like,$like,$like,$like,$like,$q,$like,$like]);
-}
-
-// 🗓️ Filtro de fecha (por defecto hoy)
-switch ($scope) {
-  case 'day':
-    $whereParts[] = "DATE(r.fecha_emision) = ?";
-    $params[] = preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) ? $day : date('Y-m-d');
-    break;
-  case 'month':
-    $first = preg_match('/^\d{4}-\d{2}$/', $month) ? ($month.'-01') : (date('Y-m').'-01');
-    $whereParts[] = "DATE(r.fecha_emision) BETWEEN ? AND LAST_DAY(?)";
-    $params[] = $first; $params[] = $first;
-    break;
-  case 'all':
-    break;
-  case 'today':
-  default:
-    $whereParts[] = "DATE(r.fecha_emision) = CURDATE()";
-    break;
-}
-
-$where = $whereParts ? ('WHERE '.implode(' AND ', $whereParts)) : '';
-
-// 🧾 Consulta principal
-$sql = "SELECT 
-          r.id, r.fecha_emision, r.observaciones,
-          p.nombre, p.apellido,
-          t.diagnostico,
-          u.username AS medico
-        FROM recetas r
-        JOIN pacientes p ON p.id = r.paciente_id
-        LEFT JOIN tratamientos t ON t.id = r.tratamiento_id
-        LEFT JOIN usuarios u ON u.id = r.medico_id
-        {$where}
-        ORDER BY r.fecha_emision DESC, r.id DESC";
-
-$stmt = $conexion->prepare($sql);
-$stmt->execute($params);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-<div class="topbar">
-  <h2 class="mb-0">Recetas</h2>
-  <form class="d-flex gap-2" method="get" action="../recetas/listar.php">
-    <input class="form-control" style="min-width:260px" type="search" name="q"
-           placeholder="Buscar por paciente, diagnóstico, médico, medicamento, fecha..."
-           value="<?= htmlspecialchars($q) ?>">
+<style>
+.form-page {display:flex;justify-content:center}
+.form-card {max-width:720px;width:100%;background:#fff;border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
+.form-card-head {background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}
+.form-card-body {padding:16px}
+</style>
 
-    <select class="form-select" name="scope" onchange="this.form.submit()">
-      <option value="today" <?= $scope==='today'?'selected':'' ?>>Hoy</option>
-      <option value="day"   <?= $scope==='day'?'selected':'' ?>>Un día</option>
-      <option value="month" <?= $scope==='month'?'selected':'' ?>>Un mes</option>
-      <option value="all"   <?= $scope==='all'?'selected':'' ?>>Todos</option>
-    </select>
+<div class="form-page">
+  <div class="form-card">
+    <div class="form-card-head">Emitir nueva receta</div>
+    <div class="form-card-body">
+      <form method="POST" action="../recetas/crear.php" class="row g-3">
+        <?php csrf_field(); ?>
 
-    <input class="form-control" type="date" name="day" value="<?= htmlspecialchars($day) ?>" <?= $scope==='day'?'':'disabled' ?>>
-    <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>" <?= $scope==='month'?'':'disabled' ?>>
+        <div class="col-12">
+          <label class="form-label">Paciente</label>
+          <select name="paciente_id" class="form-select" required>
+            <option value="">— Seleccione —</option>
+            <?php foreach($pacientes as $p): ?>
+              <option value="<?= $p['id'] ?>" <?= $p['id']==$paciente_id?'selected':'' ?>>
+                <?= htmlspecialchars($p['nombre'].' '.$p['apellido']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
-    <?php if ($q!=='' || $scope!=='today'): ?>
-      <a class="btn btn-outline-dark" href="../recetas/listar.php">Limpiar</a>
-    <?php endif; ?>
-  </form>
-</div>
+        <div class="col-12">
+          <label class="form-label">Tratamiento asociado (opcional)</label>
+          <select name="tratamiento_id" class="form-select">
+            <option value="">— Ninguno —</option>
+            <?php foreach($tratamientos as $t): ?>
+              <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['diagnostico']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-<div class="small-muted mb-2">Se muestran por defecto las <b>recetas emitidas hoy</b>.</div>
+        <div class="col-md-6">
+          <label class="form-label">Fecha emisión</label>
+          <input type="date" name="fecha_emision" class="form-control" value="<?= date('Y-m-d') ?>" required>
+        </div>
 
-<div class="table-card">
-  <div class="table-responsive">
-    <table class="table table-hover table-bordered align-middle">
-      <thead class="table-primary">
-        <tr>
-          <th>Fecha</th>
-          <th>Paciente</th>
-          <th>Diagnóstico (si aplica)</th>
-          <th>Médico</th>
-          <th>Observaciones</th>
-          <th style="width:180px" class="no-print">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($rows as $r): ?>
-          <tr>
-            <td><?= htmlspecialchars($r['fecha_emision']) ?></td>
-            <td><?= htmlspecialchars($r['nombre'].' '.$r['apellido']) ?></td>
-            <td><?= htmlspecialchars($r['diagnostico'] ?? '') ?></td>
-            <td><?= htmlspecialchars($r['medico'] ?? '') ?></td>
-            <td><?= nl2br(htmlspecialchars($r['observaciones'] ?? '')) ?></td>
-            <td class="text-center no-print">
-              <a class="btn btn-sm btn-outline-primary" href="../recetas/ver.php?id=<?= $r['id'] ?>">
-                <i class="bi bi-eye"></i> Ver / Imprimir
-              </a>
-            </td>
-          </tr>
-        <?php endforeach; if (empty($rows)): ?>
-          <tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>
-        <?php endif; ?>
-      </tbody>
-    </table>
+        <div class="col-12">
+          <label class="form-label">Observaciones</label>
+          <textarea name="observaciones" class="form-control" rows="4" placeholder="Indicaciones o comentarios..."></textarea>
+        </div>
+
+        <div class="col-12 d-flex justify-content-end gap-2">
+          <a href="../recetas/listar.php" class="btn btn-secondary">Cancelar</a>
+          <button class="btn btn-primary" type="submit">Guardar receta</button>
+        </div>
+      </form>
+    </div>
   </div>
-
-  <!-- Filtros rápidos abajo -->
-  <form class="d-flex gap-2 mt-3 no-print" method="get" action="../recetas/listar.php">
-    <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
-    <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
-    <input class="form-control" type="date" name="day" value="<?= htmlspecialchars($day) ?>">
-    <input type="hidden" name="scope" value="day">
-    <button class="btn btn-secondary">Ver día</button>
-
-    <div class="vr mx-2"></div>
-
-    <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>">
-    <input type="hidden" name="scope" value="month">
-    <button class="btn btn-secondary">Ver mes</button>
-
-    <a class="btn btn-outline-dark ms-auto" href="../recetas/listar.php">Hoy</a>
-    <a class="btn btn-outline-dark" href="../recetas/listar.php?scope=all">Todos</a>
-  </form>
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
