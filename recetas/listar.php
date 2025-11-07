@@ -107,10 +107,11 @@ $rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($r['medico'] ?? '') ?></td>
             <td><?= nl2br(htmlspecialchars($r['observaciones'] ?? '')) ?></td>
             <td class="text-center no-print">
-              <a class="btn btn-sm btn-outline-primary" href="recetas/ver.php?id=<?= $r['id'] ?>"><i class="bi bi-eye"></i> Ver</a>
-              <a class="btn btn-sm btn-outline-secondary" href="recetas/editar.php?id=<?= $r['id'] ?>"><i class="bi bi-pencil"></i></a>
-              <a class="btn btn-sm btn-outline-danger" href="recetas/eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar receta?')"><i class="bi bi-trash"></i></a>
-            </td>
+  <a class="btn btn-sm btn-outline-primary" href="/recetas/ver.php?id=<?= $r['id'] ?>">Ver / Imprimir</a>
+  <a class="btn btn-sm btn-outline-secondary" href="/recetas/editar.php?id=<?= $r['id'] ?>">Editar</a>
+  <a class="btn btn-sm btn-outline-danger" href="/recetas/eliminar.php?id=<?= $r['id'] ?>"
+     onclick="return confirm('¿Eliminar receta definitivamente?')">Eliminar</a>
+</td>
           </tr>
         <?php endforeach; if(empty($rows)): ?>
           <tr><td colspan="6" class="text-center text-muted">Sin resultados</td></tr>
