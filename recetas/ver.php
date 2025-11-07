@@ -4,26 +4,26 @@ require_role(['admin','secretaria','medico']);
 require_once __DIR__.'/../includes/conexion.php';
 include __DIR__.'/../templates/header.php';
 
-$id = (int)($_GET['id'] ?? 0);
-$s = $conexion->prepare("SELECT r.*, p.nombre, p.apellido, u.username AS medico, t.diagnostico
-                         FROM recetas r
-                         JOIN pacientes p ON p.id = r.paciente_id
-                         LEFT JOIN usuarios u ON u.id = r.medico_id
-                         LEFT JOIN tratamientos t ON t.id = r.tratamiento_id
-                         WHERE r.id=?");
+$id=(int)($_GET['id']??0);
+$s=$conexion->prepare("SELECT r.*,p.nombre,p.apellido,u.username AS medico,t.diagnostico
+                       FROM recetas r
+                       JOIN pacientes p ON p.id=r.paciente_id
+                       LEFT JOIN usuarios u ON u.id=r.medico_id
+                       LEFT JOIN tratamientos t ON t.id=r.tratamiento_id
+                       WHERE r.id=?");
 $s->execute([$id]);
-$rec = $s->fetch(PDO::FETCH_ASSOC);
-if (!$rec) { http_response_code(404); exit('No encontrada'); }
+$rec=$s->fetch(PDO::FETCH_ASSOC);
+if(!$rec){http_response_code(404);exit('No encontrada');}
 
-$items = $conexion->prepare("SELECT * FROM receta_items WHERE receta_id=? ORDER BY id");
+$items=$conexion->prepare("SELECT * FROM receta_items WHERE receta_id=? ORDER BY id");
 $items->execute([$id]);
-$lines = $items->fetchAll(PDO::FETCH_ASSOC);
+$lines=$items->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <style>
 @media print {
   .no-print, .sidebar, .topbar { display:none!important }
-  body { background:#fff!important; }
-  .content { padding:0!important; }
+  body { background:#fff!important }
+  .content { padding:0!important }
 }
 </style>
 
@@ -68,8 +68,8 @@ $lines = $items->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($it['duracion']) ?></td>
             <td><?= nl2br(htmlspecialchars($it['indicaciones'])) ?></td>
           </tr>
-        <?php endforeach; if (empty($lines)): ?>
-          <tr><td colspan="7" class="text-center text-muted">Sin medicamentos</td></tr>
+        <?php endforeach; if(empty($lines)): ?>
+          <tr><td colspan="7" class="text-center text-muted">Sin renglones</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
