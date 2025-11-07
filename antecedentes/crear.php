@@ -64,3 +64,4 @@ include __DIR__.'/../templates/header.php';
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
+
