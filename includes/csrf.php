@@ -32,4 +32,12 @@ function csrf_field() {
 function csrf_validate($token) {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token ?? '');
 }
+
+/**
+ * Alias retrocompatible — algunos módulos usan csrf_verify()
+ */
+function csrf_verify($token) {
+    return csrf_validate($token);
+}
 ?>
+
