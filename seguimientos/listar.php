@@ -121,11 +121,10 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td class="no-print">
   <a class="btn btn-sm btn-outline-secondary" href="/seguimientos/editar.php?id=<?= $r['id'] ?>">Editar</a>
   <a class="btn btn-sm btn-outline-danger" href="/seguimientos/eliminar.php?id=<?= $r['id'] ?>" onclick="return confirm('¿Eliminar seguimiento?')">Eliminar</a>
-  <a class="btn btn-sm btn-outline-primary"
-     href="/seguimientos/comprobante.php?id=<?= $r['id'] ?>"
-     target="_blank">
-     <i class="bi bi-printer"></i> Imprimir
-  </a>
+<a class="btn btn-sm btn-outline-primary"
+   href="/seguimientos/constancia.php?id=<?= $r['id'] ?>">
+   <i class="bi bi-printer"></i> Imprimir
+</a>
 </td>
           </tr>
         <?php endforeach; if(empty($rows)): ?>
