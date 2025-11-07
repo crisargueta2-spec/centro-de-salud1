@@ -4,6 +4,9 @@ require_role(['admin','secretaria','medico']);
 require_once __DIR__.'/../includes/conexion.php';
 include __DIR__.'/../templates/header.php';
 
+// Detectar carpeta base automáticamente (tratamientos)
+$base = basename(__DIR__);
+
 $q      = trim($_GET['q'] ?? '');
 $scope  = $_GET['scope'] ?? 'today';
 $day    = $_GET['day']   ?? date('Y-m-d');
@@ -66,7 +69,7 @@ $canWrite = in_array($rol,['admin','medico']);
 <div class="topbar">
   <h2 class="mb-0">Tratamientos</h2>
   <div class="d-flex gap-2">
-    <form class="d-flex gap-2" method="get" action="listar.php">
+    <form class="d-flex gap-2" method="get" action="<?= $base ?>/listar.php">
       <input class="form-control" style="min-width:260px" name="q" placeholder="Buscar..."
              value="<?= htmlspecialchars($q) ?>">
       <select class="form-select" name="scope" onchange="this.form.submit()">
@@ -79,11 +82,11 @@ $canWrite = in_array($rol,['admin','medico']);
       <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>" <?= $scope==='month'?'':'disabled' ?>>
       <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
       <?php if($q!=='' || $scope!=='today'): ?>
-        <a class="btn btn-outline-dark" href="listar.php">Limpiar</a>
+        <a class="btn btn-outline-dark" href="<?= $base ?>/listar.php">Limpiar</a>
       <?php endif; ?>
     </form>
     <?php if($canWrite): ?>
-      <a href="crear.php" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo</a>
+      <a href="<?= $base ?>/crear.php" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo</a>
     <?php endif; ?>
   </div>
 </div>
@@ -107,8 +110,8 @@ $canWrite = in_array($rol,['admin','medico']);
           <td><?= htmlspecialchars($r['fecha_fin']) ?></td>
           <td>
             <?php if($canWrite): ?>
-              <a href="editar.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-secondary">Editar</a>
-              <a href="eliminar.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar?')">Eliminar</a>
+              <a href="<?= $base ?>/editar.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-secondary">Editar</a>
+              <a href="<?= $base ?>/eliminar.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar?')">Eliminar</a>
             <?php endif; ?>
           </td>
         </tr>
@@ -119,7 +122,7 @@ $canWrite = in_array($rol,['admin','medico']);
     </table>
   </div>
 
-  <form class="d-flex gap-2 mt-3 no-print" method="get" action="listar.php">
+  <form class="d-flex gap-2 mt-3 no-print" method="get" action="<?= $base ?>/listar.php">
     <input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>">
     <label class="form-label m-0 align-self-center">Ver por día/mes:</label>
     <input class="form-control" type="date" name="day" value="<?= htmlspecialchars($day) ?>">
@@ -129,8 +132,8 @@ $canWrite = in_array($rol,['admin','medico']);
     <input class="form-control" type="month" name="month" value="<?= htmlspecialchars($month) ?>">
     <input type="hidden" name="scope" value="month">
     <button class="btn btn-secondary">Ver mes</button>
-    <a class="btn btn-outline-dark ms-auto" href="listar.php">Hoy</a>
-    <a class="btn btn-outline-dark" href="listar.php?scope=all">Todos</a>
+    <a class="btn btn-outline-dark ms-auto" href="<?= $base ?>/listar.php">Hoy</a>
+    <a class="btn btn-outline-dark" href="<?= $base ?>/listar.php?scope=all">Todos</a>
   </form>
 </div>
 <?php include __DIR__.'/../templates/footer.php'; ?>
