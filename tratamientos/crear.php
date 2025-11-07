@@ -23,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fecha_fin     = $_POST['fecha_fin'] ?: null;
 
     $stmt = $conexion->prepare("
-        INSERT INTO tratamientos (paciente_id, diagnostico, plan, estado, fecha_inicio, fecha_fin)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->execute([$paciente_id, $diagnostico, $plan, $estado, $fecha_inicio, $fecha_fin]);
+    INSERT INTO tratamientos (paciente_id, diagnostico, tratamiento, plan, estado, fecha_inicio, fecha_fin)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+");
+$stmt->execute([$paciente_id, $diagnostico, $plan, $plan, $estado, $fecha_inicio, $fecha_fin]);
 
     header('Location: listar.php?ok=1');
     exit;
