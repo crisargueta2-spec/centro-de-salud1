@@ -158,7 +158,6 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <!-- ✅ BOTÓN IMPRIMIR COMPROBANTE -->
   <a class="btn btn-sm btn-outline-primary"
      href="/asignaciones/comprobante.php?id=<?= $r['id'] ?>"
-     target="_blank">
      <i class="bi bi-printer"></i> Imprimir
   </a>
 </td>
