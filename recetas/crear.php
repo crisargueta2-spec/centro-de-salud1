@@ -9,9 +9,7 @@ $tratamiento_id  = (int)($_GET['tratamiento_id'] ?? 0);
 $user            = user();
 $medico_id       = (int)($user['id'] ?? 0);
 
-// ✅ cambiar $conn → $conexion
 $pacientes = $conexion->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre,apellido")->fetchAll(PDO::FETCH_ASSOC);
-
 $trats = [];
 if ($paciente_id) {
   $st = $conexion->prepare("SELECT id, diagnostico, estado FROM tratamientos WHERE paciente_id=? ORDER BY id DESC");
@@ -20,20 +18,18 @@ if ($paciente_id) {
 }
 
 if ($_SERVER['REQUEST_METHOD']==='POST') {
-  if(!csrf_validate($_POST['csrf'] ?? '')){ http_response_code(400); exit('CSRF'); }
+  if(!csrf_validate($_POST['csrf_token'] ?? '')){ http_response_code(400); exit('CSRF'); }
 
   $paciente_id    = (int)($_POST['paciente_id'] ?? 0);
   $tratamiento_id = (int)($_POST['tratamiento_id'] ?? 0) ?: null;
   $fecha_emision  = $_POST['fecha_emision'] ?: date('Y-m-d');
   $obs            = trim($_POST['observaciones'] ?? '');
 
-  // ✅ insertar con $conexion
   $ins = $conexion->prepare("INSERT INTO recetas (paciente_id,tratamiento_id,medico_id,fecha_emision,observaciones)
                              VALUES (?,?,?,?,?)");
   $ins->execute([$paciente_id,$tratamiento_id,$medico_id,$fecha_emision,$obs]);
   $rid = (int)$conexion->lastInsertId();
 
-  // Items
   $medicamento = $_POST['medicamento'] ?? [];
   $presentacion= $_POST['presentacion'] ?? [];
   $dosis       = $_POST['dosis'] ?? [];
@@ -59,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     ]);
   }
 
-  // ✅ Redirigir bien para Render
   header('Location: ../recetas/ver.php?id='.$rid);
   exit;
 }
