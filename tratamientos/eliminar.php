@@ -14,6 +14,6 @@ $pid = $row['paciente_id'] ?? null;
 $del = $conexion->prepare("DELETE FROM tratamientos WHERE id=?");
 $ok = $del->execute([$id]);
 
-header('Location: tratamientos/listar.php?ok=3');
+header('Location: listar.php?ok=3');
 exit;
 ?>
