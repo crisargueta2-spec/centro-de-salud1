@@ -18,7 +18,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   $stmt = $conexion->prepare("INSERT INTO antecedentes (paciente_id,tipo,descripcion,fecha_registro) VALUES (?,?,?,?)");
   $stmt->execute([$paciente_id,$tipo,$descripcion,$fecha]);
 
-  header('Location: ../antecedentes/listar.php?ok=1'); // ✅ corregido
+  header('Location: ../antecedentes/listar.php?ok=1'); // ✅ ruta fija
   exit;
 }
 
@@ -36,7 +36,7 @@ box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
   <div class="form-card">
     <div class="form-card-head">Nuevo antecedente</div>
     <div class="form-card-body">
-      <form method="POST" action="crear.php" class="row g-3">
+      <form method="POST" action="../antecedentes/crear.php" class="row g-3"> <!-- ✅ -->
         <?php csrf_field(); ?>
         <div class="col-12">
           <label class="form-label">Paciente</label>
@@ -68,12 +68,11 @@ box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
         </div>
 
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+          <a href="../antecedentes/listar.php" class="btn btn-secondary">Cancelar</a> <!-- ✅ -->
           <button class="btn btn-primary" type="submit">Guardar</button>
         </div>
       </form>
     </div>
   </div>
 </div>
-
 <?php include __DIR__.'/../templates/footer.php'; ?>
