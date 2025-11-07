@@ -35,5 +35,4 @@ function csrf_verify($token) {
 function csrf_validate($token) {
     return csrf_verify($token);
 }
-?>
 
