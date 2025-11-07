@@ -16,18 +16,28 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 
   $stmt = $conexion->prepare("INSERT INTO antecedentes (paciente_id,tipo,descripcion,fecha_registro) VALUES (?,?,?,?)");
   $stmt->execute([$paciente_id,$tipo,$descripcion,$fecha]);
-  header('Location: listar.php?ok=1'); exit;
+
+  // ✅ CORREGIDO: Redirección absoluta dentro de la carpeta
+  header('Location: antecedentes/listar.php?ok=1');
+  exit;
 }
 
 include __DIR__.'/../templates/header.php';
 ?>
-<style>.form-page{display:flex;justify-content:center}.form-card{max-width:720px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}.form-card-body{padding:16px}</style>
+<style>
+.form-page{display:flex;justify-content:center}
+.form-card{max-width:720px;width:100%;background:#fff;border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
+.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}
+.form-card-body{padding:16px}
+</style>
 
 <div class="form-page">
   <div class="form-card">
     <div class="form-card-head">Nuevo antecedente</div>
     <div class="form-card-body">
-      <form method="POST" action="crear.php" class="row g-3">
+      <!-- ✅ CORREGIDO: action con ruta completa -->
+      <form method="POST" action="antecedentes/crear.php" class="row g-3">
         <?php csrf_field(); ?>
         <div class="col-12">
           <label class="form-label">Paciente</label>
@@ -38,6 +48,7 @@ include __DIR__.'/../templates/header.php';
             <?php endforeach; ?>
           </select>
         </div>
+
         <div class="col-md-6">
           <label class="form-label">Tipo</label>
           <select name="tipo" class="form-select" required>
@@ -46,16 +57,20 @@ include __DIR__.'/../templates/header.php';
             <?php endforeach; ?>
           </select>
         </div>
+
         <div class="col-md-6">
           <label class="form-label">Fecha</label>
           <input type="date" name="fecha_registro" class="form-control" value="<?= date('Y-m-d') ?>">
         </div>
+
         <div class="col-12">
           <label class="form-label">Descripción</label>
           <textarea name="descripcion" class="form-control" rows="4" required></textarea>
         </div>
+
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <a href="listar.php" class="btn btn-secondary">Cancelar</a>
+          <!-- ✅ CORREGIDO: href con ruta completa -->
+          <a href="antecedentes/listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary" type="submit">Guardar</button>
         </div>
       </form>
@@ -64,4 +79,3 @@ include __DIR__.'/../templates/header.php';
 </div>
 
 <?php include __DIR__.'/../templates/footer.php'; ?>
-
