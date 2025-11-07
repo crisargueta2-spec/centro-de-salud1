@@ -5,15 +5,12 @@ require_once __DIR__.'/../includes/conexion.php';
 require_once __DIR__.'/../includes/csrf.php';
 require_once __DIR__.'/../includes/config.php';
 
-$base = basename(__DIR__);
-
-// Obtener lista de pacientes
-$pacientes = $conexion->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre, apellido")
-                     ->fetchAll(PDO::FETCH_ASSOC);
+// lista de pacientes
+$pacientes = $conexion->query("SELECT id, nombre, apellido FROM pacientes ORDER BY nombre, apellido")->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // ✅ Validación CSRF correcta
-    if (!csrf_validate($_POST['csrf'] ?? '')) {
+    // ✅ CSRF igual que en pacientes/asignaciones
+    if (!csrf_verify($_POST['csrf_token'] ?? '')) {
         http_response_code(400);
         exit('CSRF');
     }
@@ -31,43 +28,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ");
     $stmt->execute([$paciente_id, $diagnostico, $plan, $estado, $fecha_inicio, $fecha_fin]);
 
-    // ✅ Redirección correcta
-    header("Location: listar.php?ok=1");
+    header('Location: listar.php?ok=1');
     exit;
 }
 
 include __DIR__.'/../templates/header.php';
 ?>
-
 <style>
-.form-page {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
-}
-.form-card {
-  max-width: 700px;
-  width: 100%;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.1);
-  overflow: hidden;
-}
-.form-card-head {
-  background: #0d6efd;
-  color: #fff;
-  padding: 12px 16px;
-  font-weight: 700;
-}
-.form-card-body {
-  padding: 16px;
-}
+.form-page{display:flex;justify-content:center;margin-top:30px}
+.form-card{max-width:700px;width:100%;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
+.form-card-head{background:#0d6efd;color:#fff;padding:12px 16px;font-weight:700}
+.form-card-body{padding:16px}
 </style>
 
 <div class="form-page">
   <div class="form-card">
     <div class="form-card-head">Nuevo Tratamiento</div>
     <div class="form-card-body">
+      <!-- ✅ acción correcta y token válido -->
       <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" class="row g-3">
         <?php csrf_field(); ?>
 
