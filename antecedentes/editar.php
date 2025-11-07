@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__.'/../includes/auth.php';
+if (session_status() === PHP_SESSION_NONE) { session_start(); }  // ✅ CSRF FIX
 require_role(['admin','medico']);
 require_once __DIR__.'/../includes/conexion.php';
 require_once __DIR__.'/../includes/csrf.php';
@@ -23,7 +24,6 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
   $up = $conexion->prepare("UPDATE antecedentes SET paciente_id=?, tipo=?, descripcion=?, fecha_registro=? WHERE id=?");
   $up->execute([$paciente_id,$tipo,$descripcion,$fecha,$id]);
 
-  // ✅ CORREGIDO: redirige correctamente dentro de la carpeta
   header('Location: antecedentes/listar.php?ok=2');
   exit;
 }
@@ -42,7 +42,6 @@ box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
   <div class="form-card">
     <div class="form-card-head">Editar antecedente</div>
     <div class="form-card-body">
-      <!-- ✅ CORREGIDO: action con ruta completa -->
       <form method="POST" action="antecedentes/editar.php?id=<?= $an['id'] ?>" class="row g-3">
         <?php csrf_field(); ?>
         <div class="col-12">
@@ -76,7 +75,6 @@ box-shadow:0 2px 8px rgba(0,0,0,.1);overflow:hidden}
         </div>
 
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <!-- ✅ CORREGIDO: href con ruta completa -->
           <a href="antecedentes/listar.php" class="btn btn-secondary">Cancelar</a>
           <button class="btn btn-primary" type="submit">Actualizar</button>
         </div>
