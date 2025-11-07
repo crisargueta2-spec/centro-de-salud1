@@ -6,12 +6,12 @@ require_once __DIR__.'/../includes/conexion.php';
 $id = (int)($_GET['id'] ?? 0);
 if(!$id){ http_response_code(400); exit('Falta ID'); }
 
+/* ✅ Consulta corregida: se elimina el JOIN con usuarios
+   porque la tabla seguimientos no tiene medico_id */
 $sql = "SELECT s.id, s.fecha_registro, s.resultado, s.proxima_cita,
-               p.nombre, p.apellido, p.genero, p.fecha_nacimiento,
-               u.username AS medico
+               p.nombre, p.apellido, p.genero, p.fecha_nacimiento
         FROM seguimientos s
         JOIN pacientes p ON p.id = s.paciente_id
-        LEFT JOIN usuarios u ON u.id = s.medico_id
         WHERE s.id=?";
 $st = $conexion->prepare($sql);
 $st->execute([$id]);
@@ -60,7 +60,7 @@ align-items:center;gap:12px;border-radius:10px 10px 0 0}
 <div class="topbar no-print mb-3 d-flex justify-content-between align-items-center">
   <h2 class="mb-0">Constancia de seguimiento</h2>
   <div class="d-flex gap-2">
-    <a class="btn btn-secondary" href="javascript:history.back()">Volver</a>
+    <a class="btn btn-secondary" href="/seguimientos/listar.php">Volver</a>
     <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
   </div>
 </div>
@@ -86,7 +86,6 @@ align-items:center;gap:12px;border-radius:10px 10px 0 0}
       <b>Resultado / Indicaciones:</b>
       <div><?= nl2br(htmlspecialchars($row['resultado'])) ?></div>
     </div>
-    <div class="mb-2"><b>Médico responsable:</b> <?= htmlspecialchars($row['medico'] ?? '—') ?></div>
     <hr>
     <div class="hint">
       Este documento es informativo para el paciente. Conservar para su control.  
@@ -97,3 +96,4 @@ align-items:center;gap:12px;border-radius:10px 10px 0 0}
 
 </body>
 </html>
+
